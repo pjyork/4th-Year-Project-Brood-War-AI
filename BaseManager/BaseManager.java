@@ -2,20 +2,27 @@ package BaseManager;
 	
 import java.util.List;
 
+import BuildOrderManager.BuildOrder;
+import BuildOrderManager.BuildOrderItem;
 import bwapi.*;
 import bwta.*;
 
 public class BaseManager {
 	private List<Base> bases;
+	private Base mainBase;//initial base where most of our production will be 
 	private Game game;
 	private boolean pylonBuilding;
 	private int expectedSupply;
+	private BuildOrder buildOrder;
+	private int spentMinerals;
+	private int spentGas;
 	
-	public BaseManager(List<Base> bases,Game game){
+	public BaseManager(List<Base> bases,Game game, BuildOrder buildOrder){
 		this.bases = bases;
 		this.game = game;
 		this.pylonBuilding=false;
 		this.expectedSupply=9;
+		this.buildOrder = buildOrder;
 	}
 	
 	public void addWorker(Unit newWorker){
@@ -34,25 +41,35 @@ public class BaseManager {
 	public void manageBases(){
 		//called every frame by main module. Performs general base management, expansion decisions etc.
 		Player me = game.self();
+		int minerals = me.minerals() - spentMinerals;
+		int gas = me.gas() - spentGas;
+		int supply = me.supplyTotal()-me.supplyUsed();
+		followBuildOrder(minerals, gas ,supply);
 		for (Base base : bases) {
-			int supplyTotal = me.supplyTotal();
-			int supplyUsed = me.supplyUsed();
-			int minerals = me.minerals();
-			if(minerals>50){
-				base.buildWorker();
-			}
-			if(expectedSupply-supplyUsed<=4&&minerals>=100&&!pylonBuilding){
-				base.queueToBuild(UnitType.Protoss_Pylon);
-				expectedSupply+=16;
-			}
-			if(supplyUsed>26){
-				base.queueToBuild(UnitType.Protoss_Gateway);
-			}
 			base.checkBuilder();
 			
 		}
 	}
 	
+	private void followBuildOrder(int minerals, int gas, int supply) {
+		
+		int unusedMinerals = minerals;
+		int unusedSupply = supply;
+		int unusedGas = gas;
+		
+		while(unusedMinerals > 0 && unusedGas > 0 && unusedSupply > 0 && !buildOrder.isEmpty()){
+			BuildOrderItem toBuild = buildOrder.remove();
+			if(toBuild.isUnitOrBuilding()){
+				UnitType unit = toBuild.unitItem();
+				mainBase.queueToBuild(unit);
+			}
+			else{
+				
+			}
+		}
+		
+	}
+
 	public void expand(){
 		//select a place to expand to and send the worker manager to expand there
 	}

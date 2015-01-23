@@ -1,6 +1,8 @@
 import java.util.LinkedList;
 
 import BaseManager.*;
+import BuildOrderManager.BuildOrder;
+import BuildOrderManager.BuildOrderManager;
 import bwapi.*;
 import bwta.*;
 
@@ -11,10 +13,12 @@ public class MyBot {
 
     private Player self;
     
+    private BuildOrderManager buildOrderManager;
+    private BaseManager baseManager;
+    
     public void run() {
         mirror.getModule().setEventListener(new DefaultBWListener() {
-            private BaseManager baseManager;
-
+            
 			@Override
             public void onUnitComplete(Unit unit) {
 				if(unit.getType().isWorker()){
@@ -45,29 +49,14 @@ public class MyBot {
                 System.out.println("Map data ready");
                 
                 Unit hq = null;
-                
-                for (Unit myUnit : self.getUnits()) {
-                	
-                   
-                    //if there's enough minerals, train an SCV
-                    if (myUnit.getType() == UnitType.Protoss_Nexus) {
-                        myUnit.train(UnitType.Protoss_Probe);
-                        hq=myUnit;
-                    }
-                }
 
+                buildOrderManager = new BuildOrderManager(2, Race.Terran);
+                BuildOrder buildOrder = buildOrderManager.getBuildOrder();
                 LinkedList<Base> bases = new LinkedList<Base>();
                 Base base = new Base(hq,game);
                 bases.add(base);
-                this.baseManager = new BaseManager(bases, game);
-                
-                for (Unit myUnit : self.getUnits()) {
-                
-                    //if it's a drone and it's idle, send it to the closest mineral patch
-                    if (myUnit.getType().isWorker() && myUnit.isIdle()) {
-                        //base.addWorker(myUnit);
-                    }
-                }
+                baseManager = new BaseManager(bases, game, buildOrder);
+               
                 
             }
 
@@ -76,6 +65,7 @@ public class MyBot {
                 game.setTextSize(10);
                 game.drawTextScreen(10, 10, "Playing as " + self.getName() + " - " + self.getRace());
                 baseManager.manageBases();
+                
                 
             }
         });

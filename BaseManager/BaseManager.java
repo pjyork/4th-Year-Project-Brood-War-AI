@@ -12,17 +12,17 @@ public class BaseManager {
 	private Base mainBase;//initial base where most of our production will be 
 	private Game game;
 	private boolean pylonBuilding;
-	private int expectedSupply;
 	private BuildOrder buildOrder;
 	private int spentMinerals;
 	private int spentGas;
+	private Player me;
 	
 	public BaseManager(List<Base> bases,Game game, BuildOrder buildOrder){
 		this.bases = bases;
 		this.game = game;
 		this.pylonBuilding=false;
-		this.expectedSupply=9;
 		this.buildOrder = buildOrder;
+		this.me = game.self();
 	}
 	
 	public void addWorker(Unit newWorker){
@@ -40,34 +40,60 @@ public class BaseManager {
 	
 	public void manageBases(){
 		//called every frame by main module. Performs general base management, expansion decisions etc.
-		Player me = game.self();
-		int minerals = me.minerals() - spentMinerals;
-		int gas = me.gas() - spentGas;
-		int supply = me.supplyTotal()-me.supplyUsed();
-		followBuildOrder(minerals, gas ,supply);
+		followBuildOrder();
 		for (Base base : bases) {
 			base.checkBuilder();
 			
 		}
 	}
 	
-	private void followBuildOrder(int minerals, int gas, int supply) {
-		
-		int unusedMinerals = minerals;
-		int unusedSupply = supply;
-		int unusedGas = gas;
-		
-		while(unusedMinerals > 0 && unusedGas > 0 && unusedSupply > 0 && !buildOrder.isEmpty()){
-			BuildOrderItem toBuild = buildOrder.remove();
+	private void followBuildOrder() {
+		//dequeues as many items as can be built from the build order and builds them
+		boolean resourcesRemain = false;
+		while(!buildOrder.isEmpty() && resourcesRemain){
+			BuildOrderItem toBuild = buildOrder.peek();
 			if(toBuild.isUnitOrBuilding()){
-				UnitType unit = toBuild.unitItem();
-				mainBase.queueToBuild(unit);
+				resourcesRemain = queueToBuild(toBuild.unitItem());
 			}
 			else{
-				
+				resourcesRemain = queueToUpgrade(toBuild.upgradeItem());
 			}
 		}
 		
+	}
+
+	private boolean queueToUpgrade(UpgradeType upgrade) {
+		int mineralsRemaining = mineralsRemaining();
+		int gasRemaining = gasRemaining();
+		if(mineralsRemaining > upgrade.mineralPrice() && gasRemaining > upgrade.gasPrice()){
+			buildOrder.remove();
+			researchUpgrade(upgrade);
+			return true;
+		}
+		return false;
+	}
+
+	private void researchUpgrade(UpgradeType upgrade) {
+		
+	}
+
+	private boolean queueToBuild(UnitType unit) {
+		int mineralsRemaining = mineralsRemaining();
+		int gasRemaining = gasRemaining();
+		if(mineralsRemaining > unit.mineralPrice() && gasRemaining > unit.gasPrice()){
+			buildOrder.remove();
+			mainBase.queueToBuild(unit);
+			return true;
+		}
+		return false;
+	}
+
+	private int mineralsRemaining() {
+		return spentMinerals - me.minerals();
+	}
+	
+	private int gasRemaining() {
+		return spentGas - me.gas();
 	}
 
 	public void expand(){

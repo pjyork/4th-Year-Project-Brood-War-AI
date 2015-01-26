@@ -9,7 +9,8 @@ import bwta.*;
 
 public class BaseManager {
 	private List<Base> bases;
-	private Base mainBase;//initial base where most of our production will be 
+	private Base mainBase;//initial base where most of our production will be
+	private ProductionManager productionManager;
 	private Game game;
 	private boolean pylonBuilding;
 	private BuildOrder buildOrder;
@@ -43,7 +44,6 @@ public class BaseManager {
 		followBuildOrder();
 		for (Base base : bases) {
 			base.checkBuilder();
-			
 		}
 	}
 	
@@ -81,8 +81,13 @@ public class BaseManager {
 		int mineralsRemaining = mineralsRemaining();
 		int gasRemaining = gasRemaining();
 		if(mineralsRemaining > unit.mineralPrice() && gasRemaining > unit.gasPrice()){
-			buildOrder.remove();
-			mainBase.queueToBuild(unit);
+			if(unit.isBuilding()){
+				buildOrder.remove();
+				mainBase.queueToBuild(unit);
+			}
+			else{
+				productionManager.buildUnit(unit);
+			}
 			return true;
 		}
 		return false;

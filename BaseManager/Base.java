@@ -3,6 +3,7 @@ package BaseManager;
 import java.util.LinkedList;
 import java.util.List;
 
+import BuildOrderManager.BuildingPlacer;
 import bwapi.*;
 import bwta.*;
 
@@ -10,8 +11,9 @@ public class Base {//represents an expansion
 	private Unit hq;//The Nexus/Command Centre/Hatchery
 	private Game game;
 	private List<Unit> miningWorkers;// all workers mining in this base
-	private Unit buildingWorker=null;// if there is a worker building in this base, this is that worker
+	private Unit builderWorker=null;// if there is a worker building in this base, this is that worker
 	private List<UnitType> buildQueue;
+	private BuildingPlacer buildingPlacer;
 	
 	public Base (Unit hq, Game game){
 		assert(hq.getType()==UnitType.Protoss_Nexus||hq.getType()==UnitType.Terran_Command_Center||hq.getType()==UnitType.Zerg_Hatchery);
@@ -19,6 +21,7 @@ public class Base {//represents an expansion
 		this.miningWorkers = new LinkedList<Unit>();
 		this.buildQueue = new LinkedList<UnitType>();
 		this.game=game;
+		buildingPlacer = new BuildingPlacer(hq, game);
 		
 	}
 	
@@ -55,75 +58,26 @@ public class Base {//represents an expansion
 	}
 	
 	private void build(UnitType buildingType){
-		if(buildingWorker==null){
-			buildingWorker=miningWorkers.remove(0);
+		if(builderWorker==null){
+			builderWorker=miningWorkers.remove(0);
+			buildingPlacer.setBuilder(builderWorker);
 		}
 		
 		if (buildingType==UnitType.Protoss_Pylon){
-			boolean locFound = false;
-			int i = 1, dir = 0;
-			TilePosition loc = new TilePosition(-1,-1);
-		
-			while(!locFound&&i<10){
-				switch (dir){
-					case 0: loc = new TilePosition(hq.getTilePosition().getX(),hq.getTilePosition().getY()-7*i);
-							break;
-					case 1: loc = new TilePosition(hq.getTilePosition().getX()+4+7*i,hq.getTilePosition().getY());
-							break;
-					case 2: loc = new TilePosition(hq.getTilePosition().getX(),hq.getTilePosition().getY()+3+7*i);
-							break;
-					case 3: loc = new TilePosition(hq.getTilePosition().getX()-7*i,hq.getTilePosition().getY());
-							break;
-				}
-				if(game.canBuildHere(buildingWorker, loc, buildingType)){
-					locFound = true;
-				}
-				else if(dir<3){dir++;}
-				else{i++;}
-			}
-			buildingWorker.build(loc, UnitType.Protoss_Pylon);
+			TilePosition loc = buildingPlacer.placePylon();			
+			builderWorker.build(loc, UnitType.Protoss_Pylon);
 		}
 		else{
-			TilePosition ret = null;
-			int maxDist = 3;
-			int stopDist = 40;
-			TilePosition aroundTile = hq.getTilePosition();
-			// Refinery, Assimilator, Extractor
-			if (buildingType.isRefinery()) {
-				for (Unit n : game.neutral().getUnits()) {
-					if ((n.getType() == UnitType.Resource_Vespene_Geyser) && 
-							( Math.abs(n.getTilePosition().getX() - aroundTile.getX()) < stopDist ) &&
-							( Math.abs(n.getTilePosition().getY() - aroundTile.getY()) < stopDist )
-							) ret = n.getTilePosition();
-				}
-			}
+			TilePosition loc = buildingPlacer.placeOther(buildingType);
 			
-			while ((maxDist < stopDist) && (ret == null)) {
-				for (int i=aroundTile.getX()-maxDist; i<=aroundTile.getX()+maxDist; i++) {
-					for (int j=aroundTile.getY()-maxDist; j<=aroundTile.getY()+maxDist; j++) {
-						if (game.canBuildHere(buildingWorker, new TilePosition(i,j), buildingType, false)) {
-							// units that are blocking the tile
-							boolean unitsInWay = false;
-							for (Unit u : game.getAllUnits()) {
-								if (u.getID() == buildingWorker.getID()) continue;
-								if ((Math.abs(u.getTilePosition().getX()-i) < 4) && (Math.abs(u.getTilePosition().getY()-j) < 4)) unitsInWay = true;
-							}
-							if (!unitsInWay) {
-								ret = new TilePosition(i, j);
-							}
-							
-						}
-					}
-				}
-				maxDist += 2;
-			}
-
-			buildingWorker.build(ret, buildingType);
+			builderWorker.build(loc, buildingType);
 		}
 	}
 
 	
 	
+	
+
 	public int getDistance(Unit unit) {
 		return hq.getDistance(unit);
 	}
@@ -132,10 +86,10 @@ public class Base {//represents an expansion
 		if(!buildQueue.isEmpty()){
 			buildQueue.remove(0);
 			
-			if(!(buildingWorker==null)){				
+			if(!(builderWorker==null)){				
 				if(buildQueue.isEmpty()){
-					sendToMine(buildingWorker);
-					buildingWorker=null;
+					sendToMine(builderWorker);
+					builderWorker=null;
 					
 				}
 				else{
@@ -147,8 +101,8 @@ public class Base {//represents an expansion
 	}
 	
 	public void queueToBuild(UnitType buildingType){	
-		if(buildingWorker == null && !miningWorkers.isEmpty()){
-			buildingWorker = miningWorkers.remove(0);buildingWorker.stop();
+		if(builderWorker == null && !miningWorkers.isEmpty()){
+			builderWorker = miningWorkers.remove(0);builderWorker.stop();
 		}
 		buildQueue.add(buildingType);
 		
@@ -157,17 +111,17 @@ public class Base {//represents an expansion
 
 	public void checkBuilder() {
 		if(!buildQueue.isEmpty()){
-			if(buildingWorker == null){
-				buildingWorker=miningWorkers.remove(0); 
-				buildingWorker.stop();
+			if(builderWorker == null){
+				builderWorker=miningWorkers.remove(0); 
+				builderWorker.stop();
 			}
-			if(buildingWorker.isIdle()){
+			if(builderWorker.isIdle()){
 				build(buildQueue.get(0));
 			}
 		}
 		else{
-			sendToMine(buildingWorker);
-			buildingWorker = null;
+			sendToMine(builderWorker);
+			builderWorker = null;
 		}
 	}
 }

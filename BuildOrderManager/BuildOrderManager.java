@@ -20,33 +20,35 @@ public class BuildOrderManager {
 	}
 
 	private void selectAgressiveBuild(Race opponentRace) {
+		System.out.println("selct aggro - " + opponentRace.toString());
 		BuildOrder newBuildOrder = new BuildOrder();
+		newBuildOrder.queueWorkers(4);
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
+		newBuildOrder.queueWorkers(2);
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
+		newBuildOrder.queueWorkers(2);
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Assimilator));
+		newBuildOrder.queueWorkers(1);
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Cybernetics_Core));
+		newBuildOrder.queueWorkers(2);
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
+		newBuildOrder.queueWorkers(2);
+		newBuildOrder.add(new BuildOrderItem(UpgradeType.Singularity_Charge));
+		newBuildOrder.queueWorkers(1);
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
+		newBuildOrder.queueWorkers(2);
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Nexus));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
+		newBuildOrder.queueWorkers(1);
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+		newBuildOrder.queueWorkers(2);
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Robotics_Facility));			
+	
 		if(opponentRace.equals(Race.Terran)){
-			newBuildOrder.queueWorkers(4);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
-			newBuildOrder.queueWorkers(2);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
-			newBuildOrder.queueWorkers(2);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Assimilator));
-			newBuildOrder.queueWorkers(1);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Cybernetics_Core));
-			newBuildOrder.queueWorkers(2);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
-			newBuildOrder.queueWorkers(2);
-			newBuildOrder.add(new BuildOrderItem(UpgradeType.Singularity_Charge));
-			newBuildOrder.queueWorkers(1);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
-			newBuildOrder.queueWorkers(2);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Nexus));
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
-			newBuildOrder.queueWorkers(1);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
-			newBuildOrder.queueWorkers(2);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Robotics_Facility));			
-			
+				
 		}
 		else if(opponentRace.equals(Race.Zerg)){
 			
@@ -57,6 +59,7 @@ public class BuildOrderManager {
 		else if(opponentRace.equals(Race.Random)){
 			
 		}
+		buildOrder = newBuildOrder;
 	}
 	
 	public BuildOrder getBuildOrder(){

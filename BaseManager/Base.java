@@ -21,7 +21,7 @@ public class Base {//represents an expansion
 		this.miningWorkers = new LinkedList<Unit>();
 		this.buildQueue = new LinkedList<UnitType>();
 		this.game=game;
-		buildingPlacer = new BuildingPlacer(hq, game);
+		this.buildingPlacer = new BuildingPlacer(hq, game);
 		
 	}
 	
@@ -58,13 +58,14 @@ public class Base {//represents an expansion
 	}
 	
 	private void build(UnitType buildingType){
-		if(builderWorker==null){
-			builderWorker=miningWorkers.remove(0);
+		if(builderWorker == null){
+			builderWorker = miningWorkers.remove(0);
 			buildingPlacer.setBuilder(builderWorker);
 		}
 		
-		if (buildingType==UnitType.Protoss_Pylon){
-			TilePosition loc = buildingPlacer.placePylon();			
+		if (buildingType == UnitType.Protoss_Pylon){
+			TilePosition loc = buildingPlacer.placePylon();
+			
 			builderWorker.build(loc, UnitType.Protoss_Pylon);
 		}
 		else{
@@ -78,19 +79,22 @@ public class Base {//represents an expansion
 	
 	
 
+
+
 	public int getDistance(Unit unit) {
 		return hq.getDistance(unit);
 	}
 
 	public void buildingCreate(Unit building) {
 		if(!buildQueue.isEmpty()){
-			buildQueue.remove(0);
+			if(buildQueue.get(0) == building.getType()){
+				buildQueue.remove(0);
+			}
 			
 			if(!(builderWorker==null)){				
 				if(buildQueue.isEmpty()){
 					sendToMine(builderWorker);
 					builderWorker=null;
-					
 				}
 				else{
 					System.out.println(buildQueue.toString());
@@ -101,18 +105,21 @@ public class Base {//represents an expansion
 	}
 	
 	public void queueToBuild(UnitType buildingType){	
+		System.out.println("abandon all hope");		
 		if(builderWorker == null && !miningWorkers.isEmpty()){
-			builderWorker = miningWorkers.remove(0);builderWorker.stop();
+			builderWorker = miningWorkers.remove(0);
+			buildingPlacer.setBuilder(builderWorker);
+			builderWorker.stop();
 		}
 		buildQueue.add(buildingType);
-		
 		checkBuilder();
 	}
 
 	public void checkBuilder() {
 		if(!buildQueue.isEmpty()){
 			if(builderWorker == null){
-				builderWorker=miningWorkers.remove(0); 
+				builderWorker = miningWorkers.remove(0);
+				buildingPlacer.setBuilder(builderWorker);
 				builderWorker.stop();
 			}
 			if(builderWorker.isIdle()){

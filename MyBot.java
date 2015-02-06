@@ -24,8 +24,10 @@ public class MyBot {
 				if(unit.getType().isWorker()){
 					baseManager.addWorker(unit);
 				}
-				if(unit.getType()==UnitType.Protoss_Pylon){
-					baseManager.pylonBuilt();
+				if(unit.getType().isBuilding()){
+					if(unit.getType() == UnitType.Protoss_Pylon){
+						baseManager.pylonBuilt();
+					}
 				}
             }
 			
@@ -49,13 +51,18 @@ public class MyBot {
                 System.out.println("Map data ready");
                 
                 Unit hq = null;
+                for (Unit myUnit : self.getUnits()) {
+                	if(myUnit.getType() == UnitType.Protoss_Nexus){
+                		hq = myUnit;
+                	}
+                }
 
                 buildOrderManager = new BuildOrderManager(2, Race.Terran);
                 BuildOrder buildOrder = buildOrderManager.getBuildOrder();
                 LinkedList<Base> bases = new LinkedList<Base>();
                 Base base = new Base(hq,game);
                 bases.add(base);
-                baseManager = new BaseManager(bases, game, buildOrder);
+                baseManager = new BaseManager(bases, game, buildOrder, hq);
                
                 
             }
@@ -65,7 +72,7 @@ public class MyBot {
                 game.setTextSize(10);
                 game.drawTextScreen(10, 10, "Playing as " + self.getName() + " - " + self.getRace());
                 baseManager.manageBases();
-                
+                System.out.println("frame - " + game.getFrameCount() + " - mins  -" + game.self().minerals());
                 
             }
         });

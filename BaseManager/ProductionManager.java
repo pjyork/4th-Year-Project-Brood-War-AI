@@ -1,15 +1,18 @@
 package BaseManager;
 
+import java.util.LinkedList;
 import java.util.Queue;
 
 import bwapi.Unit;
 import bwapi.UnitType;
+import bwapi.UpgradeType;
 
 public class ProductionManager {
 	private Queue<Unit> gateways;
 	private Queue<Unit> robotics;
 	private Queue<Unit> stargates;
 	private Queue<Unit> forges;
+	private Queue<Unit> nexuses;
 	private Unit cyberneticsCore;
 	private Unit templarArchives;
 	private Unit citadelOfAdun;
@@ -19,6 +22,16 @@ public class ProductionManager {
 	private Unit arbiterTribunal;
 	
 	
+	
+	public ProductionManager(Unit hq) {
+		gateways = new LinkedList<Unit>();
+		stargates = new LinkedList<Unit>();
+		robotics = new LinkedList<Unit>();
+		forges = new LinkedList<Unit>();
+		nexuses = new LinkedList<Unit>();
+		nexuses.add(hq);
+	}
+
 	public boolean buildUnit(UnitType unit) {
 		if(gatewayCanProduce(unit)){
 			gatewayTrain(unit);
@@ -32,9 +45,13 @@ public class ProductionManager {
 			stargateTrain(unit);
 			return true;
 		}
+		else if(unit == UnitType.Protoss_Probe){
+			nexusTrain(unit);
+			return true;
+		}
 		return false;
 	}
-	
+
 	private boolean stargateCanProduce(UnitType unit) {
 		if(!stargates.isEmpty()){
 			if(unit == UnitType.Protoss_Corsair || unit == UnitType.Protoss_Scout){
@@ -106,6 +123,12 @@ public class ProductionManager {
 		stargate.train(unit);
 		stargates.add(stargate);
 	}
+	
+	private void nexusTrain(UnitType unit) {
+		Unit nexus = nexuses.remove();
+		nexus.train(unit);
+		nexuses.add(nexus);
+	}
 
 	public void addGateway(Unit gate){
 		gateways.add(gate);
@@ -117,6 +140,10 @@ public class ProductionManager {
 	
 	public void addStargate(Unit stargate){
 		stargates.add(stargate);
+	}	
+	
+	public void addNexus(Unit nexus){
+		nexuses.add(nexus);
 	}	
 	
 	public void addForge(Unit forge){
@@ -134,4 +161,23 @@ public class ProductionManager {
 	public void gatewayDestroyed(Unit gateway){
 		gateways.remove(gateway);
 	}
+	
+	public void stargateDestroyed(Unit stargate){
+		stargates.remove(stargate);
+	}
+	
+	public void roboticsDestroyed(Unit robotic){
+		robotics.remove(robotic);
+	}
+	
+	public void forgeDestroyed(Unit forge){
+		forges.remove(forge);
+	}
+
+	public boolean researchUpgrade(UpgradeType upgrade) {
+		//TODO
+		return false;
+	}
+	
+	
 }

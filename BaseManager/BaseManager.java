@@ -14,21 +14,24 @@ public class BaseManager {
 	private Game game;
 	private boolean pylonBuilding;
 	private BuildOrder buildOrder;
-	private int spentMinerals;
-	private int spentGas;
+	private int spentMinerals = 0;
+	private int spentGas = 0;
 	private Player me;
 	
-	public BaseManager(List<Base> bases,Game game, BuildOrder buildOrder){
+	public BaseManager(List<Base> bases,Game game, BuildOrder buildOrder, Unit hq){
 		this.bases = bases;
 		this.game = game;
+		this.mainBase = bases.get(0);
 		this.pylonBuilding=false;
 		this.buildOrder = buildOrder;
+		this.productionManager = new ProductionManager(hq);
 		this.me = game.self();
 	}
 	
 	public void addWorker(Unit newWorker){
 		assert(newWorker.getType().isWorker());
 		if(newWorker.getType()==UnitType.Protoss_Probe){
+			System.out.println("probe added");
 	        Base closestBase = bases.get(0);
 			for (Base base : bases) {
 	             if ( base.getDistance(newWorker) < closestBase.getDistance(newWorker)) {
@@ -41,6 +44,7 @@ public class BaseManager {
 	
 	public void manageBases(){
 		//called every frame by main module. Performs general base management, expansion decisions etc.
+		
 		followBuildOrder();
 		for (Base base : bases) {
 			base.checkBuilder();
@@ -49,7 +53,7 @@ public class BaseManager {
 	
 	private void followBuildOrder() {
 		//dequeues as many items as can be built from the build order and builds them
-		boolean resourcesRemain = false;
+		boolean resourcesRemain = true;
 		while(!buildOrder.isEmpty() && resourcesRemain){
 			BuildOrderItem toBuild = buildOrder.peek();
 			if(toBuild.isUnitOrBuilding()){
@@ -58,6 +62,7 @@ public class BaseManager {
 			else{
 				resourcesRemain = queueToUpgrade(toBuild.upgradeItem());
 			}
+			if(resourcesRemain) buildOrder.remove();
 		}
 		
 	}
@@ -74,18 +79,22 @@ public class BaseManager {
 	}
 
 	private void researchUpgrade(UpgradeType upgrade) {
-		
+		productionManager.researchUpgrade(upgrade);
 	}
 
 	private boolean queueToBuild(UnitType unit) {
 		int mineralsRemaining = mineralsRemaining();
 		int gasRemaining = gasRemaining();
-		if(mineralsRemaining > unit.mineralPrice() && gasRemaining > unit.gasPrice()){
+		
+		if(mineralsRemaining >= unit.mineralPrice() && gasRemaining >= unit.gasPrice()){
 			if(unit.isBuilding()){
 				buildOrder.remove();
 				mainBase.queueToBuild(unit);
+				spentGas += unit.gasPrice();
+				spentMinerals += unit.mineralPrice();
 			}
 			else{
+				buildOrder.remove();
 				productionManager.buildUnit(unit);
 			}
 			return true;
@@ -94,11 +103,11 @@ public class BaseManager {
 	}
 
 	private int mineralsRemaining() {
-		return spentMinerals - me.minerals();
+		return me.minerals() - spentMinerals;
 	}
 	
 	private int gasRemaining() {
-		return spentGas - me.gas();
+		return me.gas() - spentGas;
 	}
 
 	public void expand(){
@@ -111,8 +120,13 @@ public class BaseManager {
 	}
 
 	public void buildingCreate(Unit building) {
-		for (Base base : bases){
-			base.buildingCreate(building);
+		if(game.getFrameCount()!=0){
+			for (Base base : bases){
+				base.buildingCreate(building);
+			}
+			System.out.println(building.getType());
+			spentMinerals -= building.getType().mineralPrice();
+			spentGas -= building.getType().gasPrice();	
 		}
 	}
 }

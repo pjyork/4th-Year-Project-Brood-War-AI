@@ -12,7 +12,6 @@ public class BaseManager {
 	private Base mainBase;//initial base where most of our production will be
 	private ProductionManager productionManager;
 	private Game game;
-	private boolean pylonBuilding;
 	private BuildOrder buildOrder;
 	private int spentMinerals = 0;
 	private int spentGas = 0;
@@ -22,7 +21,6 @@ public class BaseManager {
 		this.bases = bases;
 		this.game = game;
 		this.mainBase = bases.get(0);
-		this.pylonBuilding=false;
 		this.buildOrder = buildOrder;
 		this.productionManager = new ProductionManager(hq);
 		this.me = game.self();
@@ -31,7 +29,6 @@ public class BaseManager {
 	public void addWorker(Unit newWorker){
 		assert(newWorker.getType().isWorker());
 		if(newWorker.getType()==UnitType.Protoss_Probe){
-			System.out.println("probe added");
 	        Base closestBase = bases.get(0);
 			for (Base base : bases) {
 	             if ( base.getDistance(newWorker) < closestBase.getDistance(newWorker)) {
@@ -62,12 +59,16 @@ public class BaseManager {
 			else{
 				resourcesRemain = queueToUpgrade(toBuild.upgradeItem());
 			}
-			if(resourcesRemain) buildOrder.remove();
+			
+			if(resourcesRemain){
+				buildOrder.remove();
+			}
 		}
 		
 	}
 
 	private boolean queueToUpgrade(UpgradeType upgrade) {
+		System.out.println(upgrade);
 		int mineralsRemaining = mineralsRemaining();
 		int gasRemaining = gasRemaining();
 		if(mineralsRemaining > upgrade.mineralPrice() && gasRemaining > upgrade.gasPrice()){
@@ -88,13 +89,13 @@ public class BaseManager {
 		
 		if(mineralsRemaining >= unit.mineralPrice() && gasRemaining >= unit.gasPrice()){
 			if(unit.isBuilding()){
-				buildOrder.remove();
+				buildOrder.peek();
 				mainBase.queueToBuild(unit);
 				spentGas += unit.gasPrice();
 				spentMinerals += unit.mineralPrice();
 			}
 			else{
-				buildOrder.remove();
+				buildOrder.peek();
 				productionManager.buildUnit(unit);
 			}
 			return true;
@@ -114,17 +115,12 @@ public class BaseManager {
 		//select a place to expand to and send the worker manager to expand there
 	}
 
-	public void pylonBuilt() {
-		pylonBuilding=false;
-		
-	}
-
 	public void buildingCreate(Unit building) {
 		if(game.getFrameCount()!=0){
 			for (Base base : bases){
 				base.buildingCreate(building);
 			}
-			System.out.println(building.getType());
+			System.out.println(" building created - " + building.getType());
 			spentMinerals -= building.getType().mineralPrice();
 			spentGas -= building.getType().gasPrice();	
 		}

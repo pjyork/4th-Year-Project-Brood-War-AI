@@ -108,4 +108,18 @@ public class BuildOrder implements Queue<BuildOrderItem>{
 	public BuildOrderItem remove() {
 		return queue.remove();
 	}	
+	
+	@Override
+	public String toString(){
+		String result = "";
+		for(BuildOrderItem  item : queue){
+			if(item.isUnitOrBuilding()){
+				result += item.unitItem().toString() + ", ";
+			}
+			else{
+				result += item.upgradeItem().toString() + ", ";
+			}
+		}
+		return result;
+	}
 }

@@ -3,22 +3,24 @@ package BaseManager;
 import java.util.LinkedList;
 import java.util.List;
 
-import BuildOrderManager.BuildingPlacer;
 import bwapi.*;
 import bwta.*;
 
 public class Base {//represents an expansion
 	private Unit hq;//The Nexus/Command Centre/Hatchery
 	private Game game;
-	private List<Unit> miningWorkers;// all workers mining in this base
+	private List<Unit> mineralMiningWorkers;// all workers mining minerals in this base
+	private List<Unit> gasMiningWorkers;// all workers mining gas in this base	
 	private Unit builderWorker=null;// if there is a worker building in this base, this is that worker
-	private List<UnitType> buildQueue;
-	private BuildingPlacer buildingPlacer;
+	private List<UnitType> buildQueue;//queue of buildings to be built in this base
+	private BuildingPlacer buildingPlacer;//an object for finding locations to build buildings
+	private List<Unit> pylons;
 	
 	public Base (Unit hq, Game game){
 		assert(hq.getType()==UnitType.Protoss_Nexus||hq.getType()==UnitType.Terran_Command_Center||hq.getType()==UnitType.Zerg_Hatchery);
 		this.hq=hq;
-		this.miningWorkers = new LinkedList<Unit>();
+		this.mineralMiningWorkers = new LinkedList<Unit>();
+		this.pylons = new LinkedList<Unit>();
 		this.buildQueue = new LinkedList<UnitType>();
 		this.game=game;
 		this.buildingPlacer = new BuildingPlacer(hq, game);
@@ -35,7 +37,8 @@ public class Base {//represents an expansion
         sendToMine(newWorker);
 	}
 	
-	public void sendToMine(Unit worker){
+	private void sendToMine(Unit worker){
+		//send worker to mine minerals at this base
 		Unit closestMineral = null;
 		
 		for (Unit neutralUnit : game.neutral().getUnits()) {
@@ -48,30 +51,29 @@ public class Base {//represents an expansion
 		if(closestMineral!=null){
 			worker.gather(closestMineral);
 		}
-		miningWorkers.add(worker);
-	}
-	
-	public void buildWorker(){
-		if(!hq.isTraining()){
-			hq.train(UnitType.Protoss_Probe);
-		}
+		mineralMiningWorkers.add(worker);
 	}
 	
 	private void build(UnitType buildingType){
+		//send our builder worker to build a building of type buildingType
+		System.out.println("send to build -" + buildingType);
 		if(builderWorker == null){
-			builderWorker = miningWorkers.remove(0);
+			System.out.println("null worker");
+			builderWorker = mineralMiningWorkers.remove(0);
 			buildingPlacer.setBuilder(builderWorker);
 		}
-		
-		if (buildingType == UnitType.Protoss_Pylon){
-			TilePosition loc = buildingPlacer.placePylon();
-			
-			builderWorker.build(loc, UnitType.Protoss_Pylon);
-		}
-		else{
-			TilePosition loc = buildingPlacer.placeOther(buildingType);
-			
-			builderWorker.build(loc, buildingType);
+		if(builderWorker.isIdle()){
+			System.out.println("idle worker");
+			if (buildingType == UnitType.Protoss_Pylon){
+				TilePosition loc = buildingPlacer.placePylon();
+				builderWorker.build(loc, UnitType.Protoss_Pylon);
+			}
+			else if(!pylons.isEmpty()) {
+				TilePosition loc = buildingPlacer.placeOther(buildingType);
+				System.out.println("loc found");
+				
+				builderWorker.build(loc, buildingType);
+			}
 		}
 	}
 
@@ -82,12 +84,18 @@ public class Base {//represents an expansion
 
 
 	public int getDistance(Unit unit) {
+		//get the distance from the unit to this base
 		return hq.getDistance(unit);
 	}
 
 	public void buildingCreate(Unit building) {
+		//called when a building has begun to be built
+		if(building.getType() == UnitType.Protoss_Pylon){
+			pylons.add(building);
+		}
 		if(!buildQueue.isEmpty()){
 			if(buildQueue.get(0) == building.getType()){
+				//if the building is from the start of our build queue
 				buildQueue.remove(0);
 			}
 			
@@ -104,10 +112,9 @@ public class Base {//represents an expansion
 		}
 	}
 	
-	public void queueToBuild(UnitType buildingType){	
-		System.out.println("abandon all hope");		
-		if(builderWorker == null && !miningWorkers.isEmpty()){
-			builderWorker = miningWorkers.remove(0);
+	public void queueToBuild(UnitType buildingType){
+		if(builderWorker == null && !mineralMiningWorkers.isEmpty()){
+			builderWorker = mineralMiningWorkers.remove(0);
 			buildingPlacer.setBuilder(builderWorker);
 			builderWorker.stop();
 		}
@@ -118,15 +125,18 @@ public class Base {//represents an expansion
 	public void checkBuilder() {
 		if(!buildQueue.isEmpty()){
 			if(builderWorker == null){
-				builderWorker = miningWorkers.remove(0);
+				System.out.println("null worker check");
+				builderWorker = mineralMiningWorkers.remove(0);
 				buildingPlacer.setBuilder(builderWorker);
 				builderWorker.stop();
 			}
 			if(builderWorker.isIdle()){
+				System.out.println("idle worker check");
 				build(buildQueue.get(0));
 			}
 		}
 		else{
+			System.out.println("empty queue worker");
 			sendToMine(builderWorker);
 			builderWorker = null;
 		}

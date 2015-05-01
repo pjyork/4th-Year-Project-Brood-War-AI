@@ -24,17 +24,15 @@ public class MyBot {
 				if(unit.getType().isWorker()){
 					baseManager.addWorker(unit);
 				}
-				if(unit.getType().isBuilding()){
-					if(unit.getType() == UnitType.Protoss_Pylon){
-						baseManager.pylonBuilt();
-					}
-				}
             }
 			
 			@Override
 			public void onUnitCreate(Unit unit){
 				if(unit.getType().isBuilding()){
 					baseManager.buildingCreate(unit);
+				}
+				if(unit.getType().equals(UnitType.Protoss_Assimilator)){
+					System.out.println("assim created");
 				}
 			}
 			
@@ -72,8 +70,7 @@ public class MyBot {
                 game.setTextSize(10);
                 game.drawTextScreen(10, 10, "Playing as " + self.getName() + " - " + self.getRace());
                 baseManager.manageBases();
-                System.out.println("frame - " + game.getFrameCount() + " - mins  -" + game.self().minerals());
-                
+               
             }
         });
 

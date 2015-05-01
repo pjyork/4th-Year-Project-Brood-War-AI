@@ -1,10 +1,7 @@
 package BuildOrderManager;
 
-import java.util.LinkedList;
-import java.util.Queue;
 
 import bwapi.Race;
-import bwapi.Unit;
 import bwapi.UnitType;
 import bwapi.UpgradeType;
 

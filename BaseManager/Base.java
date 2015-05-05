@@ -12,9 +12,11 @@ public class Base {//represents an expansion
 	private List<Unit> mineralMiningWorkers;// all workers mining minerals in this base
 	private List<Unit> gasMiningWorkers;// all workers mining gas in this base	
 	private Unit builderWorker=null;// if there is a worker building in this base, this is that worker
+	private boolean isGoingToBuild;// true iff the worker is moving towards placing a building
 	private List<UnitType> buildQueue;//queue of buildings to be built in this base
 	private BuildingPlacer buildingPlacer;//an object for finding locations to build buildings
 	private List<Unit> pylons;
+	
 	
 	public Base (Unit hq, Game game){
 		assert(hq.getType()==UnitType.Protoss_Nexus||hq.getType()==UnitType.Terran_Command_Center||hq.getType()==UnitType.Zerg_Hatchery);
@@ -56,23 +58,30 @@ public class Base {//represents an expansion
 	
 	private void build(UnitType buildingType){
 		//send our builder worker to build a building of type buildingType
-		System.out.println("send to build -" + buildingType);
 		if(builderWorker == null){
 			System.out.println("null worker");
 			builderWorker = mineralMiningWorkers.remove(0);
 			buildingPlacer.setBuilder(builderWorker);
+			builderWorker.stop();
 		}
-		if(builderWorker.isIdle()){
-			System.out.println("idle worker");
+		if(!isGoingToBuild){
+			System.out.println("idle worker send to build -" + buildingType);
 			if (buildingType == UnitType.Protoss_Pylon){
 				TilePosition loc = buildingPlacer.placePylon();
-				builderWorker.build(loc, UnitType.Protoss_Pylon);
+				if(game.canBuildHere(builderWorker, loc, buildingType, false)){
+					builderWorker.build(loc, buildingType);		
+					isGoingToBuild = true;			
+				}
 			}
-			else if(!pylons.isEmpty()) {
+			else if(!pylons.isEmpty() || buildingType == UnitType.Protoss_Assimilator) {
 				TilePosition loc = buildingPlacer.placeOther(buildingType);
 				System.out.println("loc found");
-				
-				builderWorker.build(loc, buildingType);
+				if(game.canBuildHere(builderWorker, loc, buildingType, false)){
+					System.out.println("can build");
+					builderWorker.build(loc, buildingType);	
+					System.out.println("sent to build");
+					isGoingToBuild = true;				
+				}
 			}
 		}
 	}
@@ -90,6 +99,8 @@ public class Base {//represents an expansion
 
 	public void buildingCreate(Unit building) {
 		//called when a building has begun to be built
+		System.out.println("buildcreate - base");
+		isGoingToBuild = false;
 		if(building.getType() == UnitType.Protoss_Pylon){
 			pylons.add(building);
 		}
@@ -97,6 +108,7 @@ public class Base {//represents an expansion
 			if(buildQueue.get(0) == building.getType()){
 				//if the building is from the start of our build queue
 				buildQueue.remove(0);
+				System.out.println("build dequeued");
 			}
 			
 			if(!(builderWorker==null)){				
@@ -125,18 +137,15 @@ public class Base {//represents an expansion
 	public void checkBuilder() {
 		if(!buildQueue.isEmpty()){
 			if(builderWorker == null){
-				System.out.println("null worker check");
 				builderWorker = mineralMiningWorkers.remove(0);
 				buildingPlacer.setBuilder(builderWorker);
 				builderWorker.stop();
 			}
-			if(builderWorker.isIdle()){
-				System.out.println("idle worker check");
+			if(!isGoingToBuild){
 				build(buildQueue.get(0));
 			}
 		}
-		else{
-			System.out.println("empty queue worker");
+		else if(builderWorker!=null){
 			sendToMine(builderWorker);
 			builderWorker = null;
 		}

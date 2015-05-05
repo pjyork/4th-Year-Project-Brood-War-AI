@@ -51,12 +51,13 @@ public class BuildingPlacer {
 		TilePosition aroundTile = hq.getTilePosition();
 		// Refinery, Assimilator, Extractor
 		if (buildingType.isRefinery()) {
-			System.out.println("finding assim placement");
 			for (Unit n : game.neutral().getUnits()) {
 				if ((n.getType() == UnitType.Resource_Vespene_Geyser) && 
 						( Math.abs(n.getTilePosition().getX() - aroundTile.getX()) < stopDist ) &&
 						( Math.abs(n.getTilePosition().getY() - aroundTile.getY()) < stopDist )
-						) ret = n.getTilePosition();
+						) {
+					ret = n.getTilePosition();
+				}
 			}
 		}
 		else{

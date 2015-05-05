@@ -21,13 +21,18 @@ public class MyBot {
             
 			@Override
             public void onUnitComplete(Unit unit) {
+				System.out.println("unitcomplete - " + unit.getType().toString());
 				if(unit.getType().isWorker()){
 					baseManager.addWorker(unit);
+				}
+				if(unit.isBeingConstructed()){
+					System.out.println("this is being constructed! it isn't complete!");
 				}
             }
 			
 			@Override
 			public void onUnitCreate(Unit unit){
+				System.out.println("unitcreate - " + unit.getType().toString());
 				if(unit.getType().isBuilding()){
 					baseManager.buildingCreate(unit);
 				}

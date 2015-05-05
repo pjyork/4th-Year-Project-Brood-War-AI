@@ -28,6 +28,7 @@ public class BaseManager {
 	
 	public void addWorker(Unit newWorker){
 		assert(newWorker.getType().isWorker());
+		System.out.println("new worker");
 		if(newWorker.getType()==UnitType.Protoss_Probe){
 	        Base closestBase = bases.get(0);
 			for (Base base : bases) {

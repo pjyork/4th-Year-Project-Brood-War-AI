@@ -3,6 +3,7 @@ package ArmyManager;
 import java.util.List;
 
 import bwapi.Position;
+import bwapi.PositionOrUnit;
 import bwapi.Unit;
 
 public class UnitGroup {
@@ -48,7 +49,7 @@ public class UnitGroup {
 	
 	public void attack(UnitGroup that){
 		for(Unit unit : units){
-			unit.attack(that.computeCentre());
+			unit.attack(new PositionOrUnit(that.computeCentre()));
 		}
 	}
 	

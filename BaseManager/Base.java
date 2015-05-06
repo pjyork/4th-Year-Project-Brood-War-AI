@@ -12,7 +12,7 @@ public class Base {//represents an expansion
 	private List<Unit> mineralMiningWorkers;// all workers mining minerals in this base
 	private List<Unit> gasMiningWorkers;// all workers mining gas in this base	
 	private Unit builderWorker=null;// if there is a worker building in this base, this is that worker
-	private boolean isGoingToBuild;// true iff the worker is moving towards placing a building
+	private boolean isGoingToBuild = false;// true iff the worker is moving towards placing a building
 	private List<UnitType> buildQueue;//queue of buildings to be built in this base
 	private BuildingPlacer buildingPlacer;//an object for finding locations to build buildings
 	private List<Unit> pylons;
@@ -63,22 +63,24 @@ public class Base {//represents an expansion
 			builderWorker = mineralMiningWorkers.remove(0);
 			buildingPlacer.setBuilder(builderWorker);
 			builderWorker.stop();
+			System.out.println("b");
 		}
 		if(!isGoingToBuild){
 			System.out.println("idle worker send to build -" + buildingType);
 			if (buildingType == UnitType.Protoss_Pylon){
 				TilePosition loc = buildingPlacer.placePylon();
-				if(game.canBuildHere(builderWorker, loc, buildingType, false)){
-					builderWorker.build(loc, buildingType);		
+				if(game.canBuildHere(loc, buildingType)){
+					builderWorker.build(buildingType, loc);		
 					isGoingToBuild = true;			
+					System.out.println("idle worker send to loc -" + buildingType);
 				}
 			}
 			else if(!pylons.isEmpty() || buildingType == UnitType.Protoss_Assimilator) {
 				TilePosition loc = buildingPlacer.placeOther(buildingType);
 				System.out.println("loc found");
-				if(game.canBuildHere(builderWorker, loc, buildingType, false)){
+				if(game.canBuildHere(loc, buildingType)){
 					System.out.println("can build");
-					builderWorker.build(loc, buildingType);	
+					builderWorker.build(buildingType, loc);	
 					System.out.println("sent to build");
 					isGoingToBuild = true;				
 				}
@@ -94,7 +96,7 @@ public class Base {//represents an expansion
 
 	public int getDistance(Unit unit) {
 		//get the distance from the unit to this base
-		return hq.getDistance(unit);
+		return (int) hq.getDistance(unit);
 	}
 
 	public void buildingCreate(Unit building) {
@@ -129,6 +131,7 @@ public class Base {//represents an expansion
 			builderWorker = mineralMiningWorkers.remove(0);
 			buildingPlacer.setBuilder(builderWorker);
 			builderWorker.stop();
+			System.out.println("qtb");
 		}
 		buildQueue.add(buildingType);
 		checkBuilder();
@@ -140,6 +143,7 @@ public class Base {//represents an expansion
 				builderWorker = mineralMiningWorkers.remove(0);
 				buildingPlacer.setBuilder(builderWorker);
 				builderWorker.stop();
+				System.out.println("cb");
 			}
 			if(!isGoingToBuild){
 				build(buildQueue.get(0));

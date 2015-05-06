@@ -35,7 +35,7 @@ public class BuildingPlacer {
 				case 3: loc = new TilePosition(hq.getTilePosition().getX()-7*i,hq.getTilePosition().getY());
 						break;
 			}
-			if(game.canBuildHere(builder, loc, UnitType.Protoss_Pylon)){
+			if(game.canBuildHere(loc, UnitType.Protoss_Pylon)){
 				locFound = true;
 			}
 			else if(dir<3){dir++;}
@@ -64,7 +64,7 @@ public class BuildingPlacer {
 			while ((maxDist < stopDist) && (ret == null)) {
 				for (int i=aroundTile.getX()-maxDist; i<=aroundTile.getX()+maxDist; i++) {
 					for (int j=aroundTile.getY()-maxDist; j<=aroundTile.getY()+maxDist; j++) {
-						if (game.canBuildHere(builder, new TilePosition(i,j), buildingType, false)) {
+						if (game.canBuildHere(new TilePosition(i,j), buildingType)) {
 							// units that are blocking the tile
 							boolean unitsInWay = false;
 							for (Unit u : game.getAllUnits()) {

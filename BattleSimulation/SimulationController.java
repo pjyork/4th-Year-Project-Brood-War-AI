@@ -15,7 +15,8 @@ public class SimulationController {
 		combatCalculator = new CombatCalculator(game);
 	}
 	
-	public Hashtable<Integer,SimulationGroup> groupsForNextNode(Hashtable<Integer,SimulationGroup> groups){
+	public Hashtable<Integer,SimulationGroup> groupsForNextNode(Hashtable<Integer,SimulationGroup> groups, 
+			List<SimulationGroup> idleGroups){
 		boolean idleFound = false;
 		Hashtable<Integer,SimulationGroup> currentGroups = groups;
 		Hashtable<Integer,SimulationGroup> result = new Hashtable<Integer,SimulationGroup>();
@@ -27,23 +28,10 @@ public class SimulationController {
 			
 			simulateNFrames(minFramesUntilChange, currentGroups, result);
 			
-			updateStates(currentGroups, groupsWhoseStateChanges, result);
+			updateStates(currentGroups, groupsWhoseStateChanges, result, idleGroups);
 			currentGroups = result;
 		}
 		return result;
-	}
-
-	private void updateStates(Hashtable<Integer, SimulationGroup> currentGroups,
-			List<SimulationGroup> groupsWhoseStateChanges, Hashtable<Integer, SimulationGroup> result) {
-
-		Iterator<Entry<Integer, SimulationGroup>> groupIter = currentGroups.entrySet().iterator();
-		while(groupIter.hasNext()){
-			SimulationGroup group = groupIter.next().getValue();
-			if(groupsWhoseStateChanges.contains(group)){
-				updateState(group, result);
-			}
-		}
-		
 	}
 
 	private int findNoOfFramesToSimulate(Hashtable<Integer, SimulationGroup> currentGroups,
@@ -53,11 +41,12 @@ public class SimulationController {
 		while(groupIter.hasNext()){
 			SimulationGroup group = groupIter.next().getValue();
 			int framesUntilChange = group.getFramesUntilStateChange();
+			
 			if(framesUntilChange < minFramesUntilChange){
 				minFramesUntilChange = framesUntilChange;
 				groupsWhoseStateChanges.clear();
 			}
-			if(framesUntilChange == minFramesUntilChange){
+			if(framesUntilChange == minFramesUntilChange || group.getAction().getActionType() == ActionType.WAIT){
 				groupsWhoseStateChanges.add(group);
 			}			
 		}
@@ -75,12 +64,64 @@ public class SimulationController {
 		}
 	}
 
-	private void updateState(SimulationGroup group,	Hashtable<Integer, SimulationGroup> peers) {
+	private boolean updateStates(Hashtable<Integer, SimulationGroup> currentGroups,
+			List<SimulationGroup> groupsWhoseStateChanges, Hashtable<Integer,
+			SimulationGroup> updatedGroups, List<SimulationGroup> idleGroups) {
+		boolean idleFound = false;
+		Iterator<Entry<Integer, SimulationGroup>> groupIter = currentGroups.entrySet().iterator();
+		while(groupIter.hasNext()){
+			SimulationGroup group = groupIter.next().getValue();
+			if(groupsWhoseStateChanges.contains(group)){
+				updateState(group, updatedGroups, idleGroups);
+			}
+		}
+		return idleFound;
+		
+	}
+
+	private boolean updateState(SimulationGroup group,	Hashtable<Integer,
+			SimulationGroup> peers, List<SimulationGroup> idleGroups) {
 		Action action = group.getAction();
-		if(action.getActionType() == ActionType.ATTACK){
-			combatCalculator.setValues(group, peers.get(action.getGroup2ID()));
+		ActionType actionType = action.getActionType();
+		boolean idleFound = false;
+		if(actionType == ActionType.ATTACK){
+			SimulationGroup defenderGroup = peers.get(action.getGroup2ID());
+			combatCalculator.setValues(group, defenderGroup);
+			if(combatCalculator.canAttack()){
+				group.setState(State.ATTACKING);
+				defenderGroup.increaseIncidentDamage(combatCalculator.calculateDamagePerFrame());
+			}
+			else{
+				group.setState(State.MOVING);
+				Velocity velocity = combatCalculator.calculateVelocity();
+				int travelTime = combatCalculator.calculateTravelTime();
+				group.setVelocityX(velocity.getXSpeed());
+				group.setVelocityY(velocity.getYSpeed());				
+				group.setFramesUntilStateChange(travelTime);
+			}
+		}
+		else if(actionType == ActionType.WAIT){
+			group.setAction(new Action(ActionType.DECISION,group.getID(),-1));
+			group.setState(State.IDLE);
+			idleGroups.add(group);
+			idleFound = true;
+		}
+		else if(actionType == ActionType.DECISION){
+			idleFound = true;
 		}
 		
+		return idleFound;
+		
+	}
+
+	public void setFramesUntilStateChange(SimulationGroup group, Action action) {
+		ActionType actionType = action.getActionType();
+		if(actionType == ActionType.RETREAT || actionType == ActionType.WAIT){
+			group.setFramesUntilStateChange(Integer.MAX_VALUE);
+		}
+		else {
+			group.setFramesUntilStateChange(0);
+		}
 	}
 	
 }

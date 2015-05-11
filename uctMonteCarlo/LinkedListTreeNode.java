@@ -67,7 +67,8 @@ public class LinkedListTreeNode implements TreeNode {
 		if(actions.size() > 0){
 			for(Action action : actions){
 				decisionGroup.setAction(action);
-				simulationController.groupsForNextNode(groups);
+				simulationController.setFramesUntilStateChange(decisionGroup, action);
+				simulationController.groupsForNextNode(groups, null);
 			}
 		}
 		return actions.size();

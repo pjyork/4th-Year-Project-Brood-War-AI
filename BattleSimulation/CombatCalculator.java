@@ -1,5 +1,7 @@
 package BattleSimulation;
 
+import java.awt.Point;
+
 import bwapi.DamageType;
 import bwapi.Game;
 import bwapi.Player;
@@ -130,5 +132,25 @@ class CombatCalculator {
 			}
 		}
 		return 0;
+	}
+
+
+	public Velocity calculateVelocity() {
+		double speed = attackerType.topSpeed();
+	    int xDistance = defenderPosition.getX() - attackerPosition.getX();
+	    int yDistance = defenderPosition.getY() - attackerPosition.getY();
+	    int distance = attackerPosition.getApproxDistance(defenderPosition);
+	    
+	    double xSpeed = speed * xDistance / distance;
+	    double ySpeed = speed * yDistance / distance;
+	    
+		return new Velocity(xSpeed, ySpeed);
+	}
+
+
+	public int calculateTravelTime() {
+		int distance = attackerPosition.getApproxDistance(defenderPosition) - getWeapon().maxRange();
+		double frames = distance / attackerType.topSpeed();
+		return (int) Math.ceil(frames);
 	}
 }

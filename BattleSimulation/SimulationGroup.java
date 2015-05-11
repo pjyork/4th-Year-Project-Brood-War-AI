@@ -123,4 +123,15 @@ public class SimulationGroup {
 		return hitPoints;
 	}
 	
+	public void setVelocityX(Double velocityX){
+		this.velocityX = velocityX;
+	}
+	
+	public void setVelocityY(Double velocityY){
+		this.velocityY = velocityY;
+	}
+	
+	public void setFramesUntilStateChange(int frames){
+		this.framesUntilStateChange = frames;
+	}
 }

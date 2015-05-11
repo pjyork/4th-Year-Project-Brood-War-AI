@@ -154,4 +154,12 @@ public class Base {//represents an expansion
 			builderWorker = null;
 		}
 	}
+
+	public void checkMiners() {
+		for(Unit worker : mineralMiningWorkers){
+			if(worker.isIdle()){
+				sendToMine(worker);
+			}
+		}
+	}
 }

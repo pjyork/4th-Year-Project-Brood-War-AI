@@ -2,16 +2,25 @@ package ArmyManager;
 
 import java.util.List;
 
+import bwapi.Player;
 import bwapi.Position;
 import bwapi.PositionOrUnit;
 import bwapi.Unit;
+import bwapi.UnitType;
 
 public class UnitGroup {
+	//each group can only have one type of unit
+	private UnitType unitType;
+	//knowing which player controls the group is important for knowing upgrades
+	private Player controller;
 	private List<Unit> units;
 	private Position centre;
 	
 	public UnitGroup(List<Unit> units){
 		this.units = units;
+		Unit unit = units.get(0);
+		this.unitType = unit.getType();
+		this.controller = unit.getPlayer();
 		computeCentre();
 	}
 	
@@ -58,5 +67,31 @@ public class UnitGroup {
 		for(Unit unit : units){
 			unit.move(this.computeCentre());
 		}
+	}
+	
+	public double effectiveHitPoints(){
+		//using the sum of the sqrts so that it is recognised that a small number of healthy units
+		// is weaker than a large number of hurt units
+		double ret = 0.0;
+		for(Unit unit : units){
+			ret += Math.sqrt((double)unit.getHitPoints());
+		}
+		return ret*ret;
+	}
+	
+	public int unitArmor(){
+		return units.get(0).getType().armor();		
+	}
+
+	public UnitType getType() {
+		return unitType;
+	}
+
+	public Player getPlayer() {
+		return controller;
+	}
+
+	public int size() {
+		return units.size();
 	}
 }

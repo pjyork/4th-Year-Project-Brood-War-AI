@@ -46,6 +46,7 @@ public class BaseManager {
 		followBuildOrder();
 		for (Base base : bases) {
 			base.checkBuilder();
+			base.checkMiners();
 		}
 	}
 	

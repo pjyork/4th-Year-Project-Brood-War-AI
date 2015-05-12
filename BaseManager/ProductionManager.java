@@ -178,6 +178,16 @@ public class ProductionManager {
 		//TODO
 		return false;
 	}
+
+	public void buildingCompleted(Unit building) {
+		UnitType buildingType = building.getType();
+		if(buildingType == UnitType.Protoss_Gateway){
+			addGateway(building);
+		}
+		else if(buildingType == UnitType.Protoss_Cybernetics_Core){
+			setCyberneticsCore(building);
+		}
+	}
 	
 	
 }

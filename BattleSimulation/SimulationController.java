@@ -109,6 +109,9 @@ public class SimulationController {
 		else if(actionType == ActionType.DECISION){
 			idleFound = true;
 		}
+		else if(actionType == ActionType.RETREAT){
+			group.setState(State.MOVING);
+		}
 		
 		return idleFound;
 		
@@ -116,7 +119,7 @@ public class SimulationController {
 
 	public void setFramesUntilStateChange(SimulationGroup group, Action action) {
 		ActionType actionType = action.getActionType();
-		if(actionType == ActionType.RETREAT || actionType == ActionType.WAIT){
+		if(actionType == ActionType.WAIT){
 			group.setFramesUntilStateChange(Integer.MAX_VALUE);
 		}
 		else {

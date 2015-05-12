@@ -21,6 +21,12 @@ public class LinkedListTreeNode implements TreeNode {
 	private int decisionGroupID;
 	private SimulationController simulationController;
 	
+	public LinkedListTreeNode(Hashtable<Integer, SimulationGroup> groups,
+			SimulationController simulationController, int decisionGroupID){
+		this.groups = groups;
+		this.simulationController = simulationController;
+		this.decisionGroupID = decisionGroupID;
+	}
 	
 	
 	@Override
@@ -61,16 +67,25 @@ public class LinkedListTreeNode implements TreeNode {
 	}
 
 	@Override
-	public int generateChildren(Hashtable<Integer, SimulationGroup> groups) {
+	public int generateChildren() {
 		SimulationGroup decisionGroup = groups.get(decisionGroupID);
+		Action decisionAction = decisionGroup.getAction();
 		List<Action> actions = decisionGroup.generateActions();
+		LinkedList<Child> newChildren = new LinkedList<Child>();
 		if(actions.size() > 0){
 			for(Action action : actions){
 				decisionGroup.setAction(action);
 				simulationController.setFramesUntilStateChange(decisionGroup, action);
-				simulationController.groupsForNextNode(groups, null);
+				LinkedList<SimulationGroup> idleGroups = new LinkedList<SimulationGroup>();
+				Hashtable<Integer, SimulationGroup> nextGroups = simulationController.groupsForNextNode(groups, idleGroups);
+				int newDecisionGroupID = idleGroups.get(0).getID();
+				TreeNode newNode = new LinkedListTreeNode(nextGroups, simulationController, newDecisionGroupID);
+				Child newChild = new Child(newNode, action);
+				newChildren.add(newChild);
 			}
 		}
+		decisionGroup.setAction(decisionAction);
+		this.children = newChildren;
 		return actions.size();
 	}
 

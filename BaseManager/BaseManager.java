@@ -28,7 +28,6 @@ public class BaseManager {
 	
 	public void addWorker(Unit newWorker){
 		assert(newWorker.getType().isWorker());
-		System.out.println("new worker");
 		if(newWorker.getType()==UnitType.Protoss_Probe){
 	        Base closestBase = bases.get(0);
 			for (Base base : bases) {
@@ -70,7 +69,6 @@ public class BaseManager {
 	}
 
 	private boolean queueToUpgrade(UpgradeType upgrade) {
-		System.out.println(upgrade);
 		int mineralsRemaining = mineralsRemaining();
 		int gasRemaining = gasRemaining();
 		if(mineralsRemaining > upgrade.mineralPrice() && gasRemaining > upgrade.gasPrice()){
@@ -91,13 +89,14 @@ public class BaseManager {
 		
 		if(mineralsRemaining >= unit.mineralPrice() && gasRemaining >= unit.gasPrice()){
 			if(unit.isBuilding()){
-				buildOrder.peek();
 				mainBase.queueToBuild(unit);
 				spentGas += unit.gasPrice();
 				spentMinerals += unit.mineralPrice();
 			}
 			else{
-				buildOrder.peek();
+				if(unit.supplyRequired() > me.supplyTotal() - me.supplyUsed()){
+					return false;
+				}
 				productionManager.buildUnit(unit);
 			}
 			return true;
@@ -126,5 +125,14 @@ public class BaseManager {
 			spentMinerals -= building.getType().mineralPrice();
 			spentGas -= building.getType().gasPrice();	
 		}
+	}
+
+	public void buildingComplete(Unit building) {
+		if(game.getFrameCount()!=0){
+			for (Base base : bases){
+				base.buildingComplete(building);
+			}
+			productionManager.buildingCompleted(building);
+		}		
 	}
 }

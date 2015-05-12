@@ -29,6 +29,9 @@ public class MyBot extends DefaultBWListener {
 		if(unit.isBeingConstructed()){
 			System.out.println("this is being constructed! it isn't complete!");
 		}
+		if(unit.getType().isBuilding()){
+			baseManager.buildingComplete(unit);
+		}
     }
 	
 	@Override

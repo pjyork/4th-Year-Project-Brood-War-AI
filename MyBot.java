@@ -29,8 +29,16 @@ public class MyBot extends DefaultBWListener {
 		if(unit.isBeingConstructed()){
 			System.out.println("this is being constructed! it isn't complete!");
 		}
+		boolean refinery = false;
+		if(unit.getType() == UnitType.Protoss_Assimilator){
+			refinery = true;
+		}
 		if(unit.getType().isBuilding()){
+			System.out.println("this is building!" + refinery);			
 			baseManager.buildingComplete(unit);
+		}
+		else{
+			System.out.println("this is refinery?" + refinery);
 		}
     }
 	

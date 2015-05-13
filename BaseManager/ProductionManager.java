@@ -34,20 +34,16 @@ public class ProductionManager {
 
 	public boolean buildUnit(UnitType unit) {
 		if(gatewayCanProduce(unit)){
-			gatewayTrain(unit);
-			return true;
+			return gatewayTrain(unit);
 		}
 		else if(roboticsCanProduce(unit)){
-			roboticsTrain(unit);
-			return true;
+			return roboticsTrain(unit);
 		}
 		else if(stargateCanProduce(unit)){
-			stargateTrain(unit);
-			return true;
+			return stargateTrain(unit);
 		}
 		else if(unit == UnitType.Protoss_Probe){
-			nexusTrain(unit);
-			return true;
+			return nexusTrain(unit);
 		}
 		return false;
 	}
@@ -55,15 +51,12 @@ public class ProductionManager {
 	private boolean stargateCanProduce(UnitType unit) {
 		if(!stargates.isEmpty()){
 			if(unit == UnitType.Protoss_Corsair || unit == UnitType.Protoss_Scout){
-				stargateTrain(unit);
 				return true;
 			}
 			if(unit == UnitType.Protoss_Carrier && fleetBeacon != null){
-				stargateTrain(unit);
 				return true;
 			}
 			if(unit == UnitType.Protoss_Arbiter && arbiterTribunal != null){
-				stargateTrain(unit);
 				return true;
 			}
 		}
@@ -73,15 +66,12 @@ public class ProductionManager {
 	private boolean roboticsCanProduce(UnitType unit) {
 		if(!robotics.isEmpty()){
 			if(unit == UnitType.Protoss_Shuttle){
-				roboticsTrain(unit);
 				return true;
 			}
 			if(unit == UnitType.Protoss_Reaver && roboticsSupportBay != null){
-				roboticsTrain(unit);
 				return true;
 			}
 			if(unit == UnitType.Protoss_Observer  && observatory != null){
-				roboticsTrain(unit);
 				return true;
 			}
 		}
@@ -91,43 +81,44 @@ public class ProductionManager {
 	private boolean gatewayCanProduce(UnitType unit) {
 		if(!gateways.isEmpty()){
 			if(unit == UnitType.Protoss_Zealot){
-				gatewayTrain(unit);
 				return true;
 			}
 			if(unit == UnitType.Protoss_Dragoon && cyberneticsCore != null){
-				gatewayTrain(unit);
 				return true;
 			}
 			if((unit == UnitType.Protoss_High_Templar || unit == UnitType.Protoss_Dark_Templar) && templarArchives != null){
-				gatewayTrain(unit);
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private void gatewayTrain(UnitType unit) {
+	private boolean gatewayTrain(UnitType unit) {
 		Unit gateway = gateways.remove();
-		gateway.train(unit);
+		boolean trained = gateway.train(unit);
 		gateways.add(gateway);
+		return trained;
 	}
 
-	private void roboticsTrain(UnitType unit) {
+	private boolean roboticsTrain(UnitType unit) {
 		Unit roboticsFac = robotics.remove();
-		roboticsFac.train(unit);
+		boolean trained = roboticsFac.train(unit);
 		robotics.add(roboticsFac);
+		return trained;
 	}
 
-	private void stargateTrain(UnitType unit) {
+	private boolean stargateTrain(UnitType unit) {
 		Unit stargate = stargates.remove();
-		stargate.train(unit);
+		boolean trained = stargate.train(unit);
 		stargates.add(stargate);
+		return trained;
 	}
 	
-	private void nexusTrain(UnitType unit) {
+	private boolean nexusTrain(UnitType unit) {
 		Unit nexus = nexuses.remove();
-		nexus.train(unit);
+		boolean trained = nexus.train(unit);
 		nexuses.add(nexus);
+		return trained;
 	}
 
 	public void addGateway(Unit gate){
@@ -175,8 +166,14 @@ public class ProductionManager {
 	}
 
 	public boolean researchUpgrade(UpgradeType upgrade) {
-		//TODO
+		if(cyberneticsCoreCanUpgrade(upgrade)){
+			return cyberneticsCore.upgrade(upgrade);
+		}
 		return false;
+	}
+
+	private boolean cyberneticsCoreCanUpgrade(UpgradeType upgrade) {
+		return cyberneticsCore.canUpgrade(upgrade);
 	}
 
 	public void buildingCompleted(Unit building) {

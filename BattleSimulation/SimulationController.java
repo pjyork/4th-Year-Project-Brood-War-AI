@@ -7,9 +7,15 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import bwapi.Game;
+import bwapi.Player;
 
 public class SimulationController {
 	private CombatCalculator combatCalculator;
+	private int framesSimulated = 0; 
+	private Player myPlayer;
+	private Player opponent;
+	private int myStartingHP;
+	private int opponentStartingHP;
 	
 	public SimulationController(Game game){
 		combatCalculator = new CombatCalculator(game);
@@ -20,6 +26,7 @@ public class SimulationController {
 		boolean idleFound = false;
 		Hashtable<Integer,SimulationGroup> currentGroups = groups;
 		Hashtable<Integer,SimulationGroup> result = new Hashtable<Integer,SimulationGroup>();
+		int framesSimulated = 0;
 		while(!idleFound){
 			int minFramesUntilChange = Integer.MAX_VALUE;
 			List<SimulationGroup> groupsWhoseStateChanges = new LinkedList<SimulationGroup>();
@@ -30,8 +37,15 @@ public class SimulationController {
 			
 			updateStates(currentGroups, groupsWhoseStateChanges, result, idleGroups);
 			currentGroups = result;
+			framesSimulated += minFramesUntilChange;
 		}
+		this.framesSimulated = framesSimulated;
 		return result;
+	}
+	
+	public int getFramesSimulated(){
+		//gets the number of frames simulated during the last group generation
+		return framesSimulated;
 	}
 
 	private int findNoOfFramesToSimulate(Hashtable<Integer, SimulationGroup> currentGroups,
@@ -125,6 +139,47 @@ public class SimulationController {
 		else {
 			group.setFramesUntilStateChange(0);
 		}
+	}
+
+	public ExpectedValue randomPlayout(Hashtable<Integer, SimulationGroup> groups,
+			int framesSimulatedThusFar, int decisionGroupID) {
+		LinkedList<SimulationGroup> idleGroups = new LinkedList<SimulationGroup>();
+		idleGroups.add(groups.get(decisionGroupID));
+		Hashtable<Integer, SimulationGroup> currentGroups = groups;
+		int frames = framesSimulatedThusFar;
+		boolean bothPlayersHaveGroups = true;
+		while(frames < 7200 && bothPlayersHaveGroups && !idleGroups.isEmpty()){//under 5 minutes have been simulated
+			idleGroups.clear();
+			currentGroups = groupsForNextNode(currentGroups, idleGroups);
+			SimulationGroup newDecisionGroup = idleGroups.getFirst();
+			List<Action> actions = newDecisionGroup.generateActions();
+			frames += framesSimulated;
+			Action actionChoice = actions.get((int) Math.round(Math.random() * actions.size()));
+			newDecisionGroup.setAction(actionChoice);
+		}
+		ExpectedValue result = getValue(currentGroups);
+		return result;
+	}
+
+	private ExpectedValue getValue(Hashtable<Integer, SimulationGroup> currentGroups) {
+		Iterator<Entry<Integer, SimulationGroup>> groupIter = currentGroups.entrySet().iterator();
+		ExpectedValue result = new ExpectedValue();
+		int myHP = 0;
+		int opponentHP = 0;
+		while(groupIter.hasNext()){
+			SimulationGroup group = groupIter.next().getValue();
+			if(group.getPlayer().equals(myPlayer)){
+				myHP += group.getHitPoints();
+			}
+			else{
+				opponentHP += group.getHitPoints();
+			}
+		}
+		double myEV = myHP / (double) myStartingHP +  opponentStartingHP / (double) opponentHP;
+		double opponentEV = opponentHP / (double) opponentStartingHP +  myStartingHP / (double) myHP;
+		result.myEV = myEV;
+		result.opponentEV = opponentEV;
+		return result;
 	}
 	
 }

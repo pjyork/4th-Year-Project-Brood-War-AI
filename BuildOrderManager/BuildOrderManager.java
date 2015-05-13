@@ -29,6 +29,12 @@ public class BuildOrderManager {
 		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Cybernetics_Core));
 		newBuildOrder.queueWorkers(2);
 		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+		newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
 		newBuildOrder.queueWorkers(2);
 		newBuildOrder.add(new BuildOrderItem(UpgradeType.Singularity_Charge));
 		newBuildOrder.queueWorkers(1);

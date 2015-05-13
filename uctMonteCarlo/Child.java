@@ -15,11 +15,11 @@ public class Child {
 		return node;
 	}
 	
-	public float getMyValue(){
+	public double getMyValue(){
 		return node.getMyValue();
 	}
 	
-	public float getOpponentValue(){
+	public double getOpponentValue(){
 		return node.getOpponentValue();
 	}
 }

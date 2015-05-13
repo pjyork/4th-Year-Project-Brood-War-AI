@@ -129,6 +129,12 @@ public class Base {//represents an expansion
 	}
 
 	public void checkMiners() {
+		if(game.self().supplyUsed()==30 && gasMiningWorkers.isEmpty()){
+			System.out.println("gasgas");
+			for(int i = 0; i < 3; i++){
+				sendToMineGas(mineralMiningWorkers.remove(0));
+			}			
+		}
 		for(Unit worker : mineralMiningWorkers){
 			if(worker.isIdle()){
 				sendToMine(worker);

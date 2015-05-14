@@ -17,30 +17,31 @@ public class SimulationController {
 	private int myStartingHP;
 	private int opponentStartingHP;
 	
-	public SimulationController(Game game){
+	public SimulationController(Game game, Player myPlayer){
 		combatCalculator = new CombatCalculator(game);
+		this.myPlayer = myPlayer;
 	}
 	
-	public Hashtable<Integer,SimulationGroup> groupsForNextNode(Hashtable<Integer,SimulationGroup> groups, 
+	public void progressGroups(Hashtable<Integer,SimulationGroup> groups, 
 			List<SimulationGroup> idleGroups){
 		boolean idleFound = false;
-		Hashtable<Integer,SimulationGroup> currentGroups = groups;
-		Hashtable<Integer,SimulationGroup> result = new Hashtable<Integer,SimulationGroup>();
 		int framesSimulated = 0;
-		while(!idleFound){
+		int loops = 0;
+		while(!idleFound && !groups.isEmpty() && framesSimulated < 7200){
 			int minFramesUntilChange = Integer.MAX_VALUE;
 			List<SimulationGroup> groupsWhoseStateChanges = new LinkedList<SimulationGroup>();
 			
-			minFramesUntilChange = findNoOfFramesToSimulate(currentGroups, groupsWhoseStateChanges);
+			minFramesUntilChange = findNoOfFramesToSimulate(groups, groupsWhoseStateChanges);
 			
-			simulateNFrames(minFramesUntilChange, currentGroups, result);
+			simulateNFrames(minFramesUntilChange, groups);
 			
-			updateStates(currentGroups, groupsWhoseStateChanges, result, idleGroups);
-			currentGroups = result;
+			idleFound = updateStates(groups, groupsWhoseStateChanges, idleGroups);
 			framesSimulated += minFramesUntilChange;
+			
 		}
+		System.out.println("frames - " + framesSimulated);
 		this.framesSimulated = framesSimulated;
-		return result;
+		
 	}
 	
 	public int getFramesSimulated(){
@@ -67,26 +68,24 @@ public class SimulationController {
 		return minFramesUntilChange;
 	}
 
-	private void simulateNFrames(int n,	Hashtable<Integer, SimulationGroup> currentGroups, Hashtable<Integer, SimulationGroup> result) {
+	private void simulateNFrames(int n,	Hashtable<Integer, SimulationGroup> currentGroups) {
 
 		Iterator<Entry<Integer, SimulationGroup>> groupIter = currentGroups.entrySet().iterator();
 		while(groupIter.hasNext()){
 			SimulationGroup group = groupIter.next().getValue();
 			//set the group's peers
-			group.setPeers(result);
-			result.put(group.getID(), group.simulateNFrames(n));
+			group.simulateNFrames(n);
 		}
 	}
 
 	private boolean updateStates(Hashtable<Integer, SimulationGroup> currentGroups,
-			List<SimulationGroup> groupsWhoseStateChanges, Hashtable<Integer,
-			SimulationGroup> updatedGroups, List<SimulationGroup> idleGroups) {
+			List<SimulationGroup> groupsWhoseStateChanges, List<SimulationGroup> idleGroups) {
 		boolean idleFound = false;
 		Iterator<Entry<Integer, SimulationGroup>> groupIter = currentGroups.entrySet().iterator();
 		while(groupIter.hasNext()){
 			SimulationGroup group = groupIter.next().getValue();
 			if(groupsWhoseStateChanges.contains(group)){
-				updateState(group, updatedGroups, idleGroups);
+				idleFound = updateState(group, currentGroups, idleGroups) || idleFound;
 			}
 		}
 		return idleFound;
@@ -101,16 +100,39 @@ public class SimulationController {
 		if(actionType == ActionType.ATTACK){
 			SimulationGroup defenderGroup = peers.get(action.getGroup2ID());
 			combatCalculator.setValues(group, defenderGroup);
-			if(combatCalculator.canAttack()){
+			if(defenderGroup.getHitPoints() <= 0){
+				group.setState(State.IDLE);
+				group.setAction(new Action(ActionType.DECISION,group.getID(),-1));
+				idleFound = true;
+				idleGroups.add(group);
+				group.setFramesUntilStateChange(0);
+			}
+			else if(group.getState() == State.MOVING && combatCalculator.canAttack()){
 				group.setState(State.ATTACKING);
 				defenderGroup.increaseIncidentDamage(combatCalculator.calculateDamagePerFrame());
+				group.setFramesUntilStateChange(defenderGroup.getFramesToLive());
 			}
-			else{
+			else if(group.getState() == State.MOVING && 
+					defenderGroup.getAction().getActionType() == ActionType.RETREAT &&
+					defenderGroup.getType().topSpeed() >= group.getType().topSpeed()){
+				group.setState(State.IDLE);
+				group.setAction(new Action(ActionType.DECISION,group.getID(),-1));
+				group.setVelocityX(0.0);
+				group.setVelocityY(0.0);
+			}
+			else if(group.getState() == State.IDLE && !combatCalculator.canAttack()){
 				group.setState(State.MOVING);
 				Velocity velocity = combatCalculator.calculateVelocity();
 				int travelTime = combatCalculator.calculateTravelTime();
 				group.setVelocityX(velocity.getXSpeed());
-				group.setVelocityY(velocity.getYSpeed());				
+				group.setVelocityY(velocity.getYSpeed());	
+				group.setFramesUntilStateChange(travelTime);
+			}
+			else{
+				Velocity velocity = combatCalculator.calculateVelocity();
+				int travelTime = combatCalculator.calculateTravelTime();
+				group.setVelocityX(velocity.getXSpeed());
+				group.setVelocityY(velocity.getYSpeed());	
 				group.setFramesUntilStateChange(travelTime);
 			}
 		}
@@ -118,13 +140,20 @@ public class SimulationController {
 			group.setAction(new Action(ActionType.DECISION,group.getID(),-1));
 			group.setState(State.IDLE);
 			idleGroups.add(group);
-			idleFound = true;
+			idleFound = true;				
+			group.setFramesUntilStateChange(0);
 		}
 		else if(actionType == ActionType.DECISION){
+			idleGroups.add(group);
 			idleFound = true;
 		}
 		else if(actionType == ActionType.RETREAT){
-			group.setState(State.MOVING);
+			combatCalculator.setValues(group, group);
+			Velocity velocity = combatCalculator.calculateRetreat();
+			group.setVelocityX(velocity.getXSpeed());
+			group.setVelocityY(velocity.getYSpeed());		
+			group.setFramesUntilStateChange(Integer.MAX_VALUE);
+			group.setState(State.MOVING); 
 		}
 		
 		return idleFound;
@@ -144,18 +173,30 @@ public class SimulationController {
 	public ExpectedValue randomPlayout(Hashtable<Integer, SimulationGroup> groups,
 			int framesSimulatedThusFar, int decisionGroupID) {
 		LinkedList<SimulationGroup> idleGroups = new LinkedList<SimulationGroup>();
-		idleGroups.add(groups.get(decisionGroupID));
 		Hashtable<Integer, SimulationGroup> currentGroups = groups;
 		int frames = framesSimulatedThusFar;
 		boolean bothPlayersHaveGroups = true;
-		while(frames < 7200 && bothPlayersHaveGroups && !idleGroups.isEmpty()){//under 5 minutes have been simulated
+		while(decisionGroupID != -1 && frames < 7200 && bothPlayersHaveGroups && !idleGroups.isEmpty()){//under 5 minutes have been simulated
 			idleGroups.clear();
-			currentGroups = groupsForNextNode(currentGroups, idleGroups);
+			progressGroups(currentGroups, idleGroups);
 			SimulationGroup newDecisionGroup = idleGroups.getFirst();
 			List<Action> actions = newDecisionGroup.generateActions();
 			frames += framesSimulated;
-			Action actionChoice = actions.get((int) Math.round(Math.random() * actions.size()));
+			Action actionChoice = actions.get((int) (Math.random() * actions.size()));
 			newDecisionGroup.setAction(actionChoice);
+
+			Iterator<Entry<Integer, SimulationGroup>> groupIter = currentGroups.entrySet().iterator();
+			boolean myGroupFound = false, opponentGroupFound = false;
+			while(groupIter.hasNext()){
+				SimulationGroup group = groupIter.next().getValue();
+				if(group.getPlayer().getID() == 0){
+					myGroupFound = true;
+				}
+				else{
+					opponentGroupFound = true;
+				}				
+			}
+			bothPlayersHaveGroups = myGroupFound && opponentGroupFound;			
 		}
 		ExpectedValue result = getValue(currentGroups);
 		return result;

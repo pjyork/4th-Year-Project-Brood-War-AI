@@ -11,7 +11,12 @@ public class Child {
 		this.action = action;
 	}
 	
+	public Action getAction(){
+		return action;
+	}
+	
 	public TreeNode getNode(){
+		System.out.println("getNode");
 		return node;
 	}
 	

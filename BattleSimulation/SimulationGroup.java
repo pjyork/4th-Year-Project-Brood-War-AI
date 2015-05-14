@@ -10,6 +10,7 @@ import bwapi.Player;
 import bwapi.Position;
 import bwapi.UnitType;
 
+
 //represents a group of units in the simulation
 public class SimulationGroup {
 	private int groupID;
@@ -44,6 +45,7 @@ public class SimulationGroup {
 	}
 	
 	public List<Action> generateActions(){
+		System.out.println("generateAction - " + groupID + " " + this.toString());
 		LinkedList<Action> result = new LinkedList<Action>();
 		Iterator<Entry<Integer, SimulationGroup>> groupIter = peers.entrySet().iterator();
 		while(groupIter.hasNext()){
@@ -89,22 +91,26 @@ public class SimulationGroup {
 		this.action = action;
 	}
 	
-	public SimulationGroup simulateNFrames(int n){
+	public void simulateNFrames(int n){
 		int oldX = pos.getX();
-		int oldY = pos.getY();
+		int oldY = pos.getX();
 		int newX =  oldX + (int) velocityX * n;
 		int newY =  oldY + (int) velocityY * n;
+		newX = Math.min(1000, Math.max(0, newX));
+		newY = Math.min(1000, Math.max(0, newY));
 		
-		int newHitPoints = Math.max(hitPoints - (int) (n * incidentDamagePerFrame), 0);
+		hitPoints = Math.max(hitPoints - (int) (n * incidentDamagePerFrame), 0);
 		
-		Position newPos = new Position(newX,newY);
-		SimulationGroup result = new SimulationGroup(groupID, controller, type, newPos, newHitPoints);
+		pos = new Position(newX,newY);
 		framesUntilStateChange -= n;
-		return result;
 	}
 
 	public void setState(State state) {
 		this.state = state;
+		if(state != State.MOVING){
+			this.velocityX = 0;
+			this.velocityY = 0;
+		}
 	}
 	
 	public State getState(){
@@ -133,5 +139,18 @@ public class SimulationGroup {
 	
 	public void setFramesUntilStateChange(int frames){
 		this.framesUntilStateChange = frames;
+	}
+
+	public int getFramesToLive() {
+		return (int) (hitPoints / incidentDamagePerFrame);
+	}
+	
+	public SimulationGroup clone(){
+		SimulationGroup result = new SimulationGroup(groupID, controller, type, pos, framesUntilStateChange);
+		result.setAction(action);
+		result.setState(state);
+		result.setVelocityX(velocityX);
+		result.setVelocityY(velocityY);
+		return result;		
 	}
 }

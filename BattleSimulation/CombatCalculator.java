@@ -1,16 +1,16 @@
 package BattleSimulation;
 
-import java.awt.Point;
-
 import bwapi.DamageType;
 import bwapi.Game;
 import bwapi.Player;
 import bwapi.Position;
-import bwapi.Region;
-import bwapi.TechType;
 import bwapi.UnitSizeType;
 import bwapi.UnitType;
 import bwapi.WeaponType;
+import bwapi.Region;
+
+
+
 
 class CombatCalculator {
 	SimulationGroup attackerGroup;
@@ -71,9 +71,6 @@ class CombatCalculator {
 	
 	private int getCooldown(WeaponType weapon) {
 		int ret = weapon.damageCooldown();
-		if(attackerType == UnitType.Terran_Marine && attackerPlayer.hasResearched(TechType.Stim_Packs)){
-			ret = ret/2;
-		}
 		return ret;
 	}
 
@@ -150,7 +147,18 @@ class CombatCalculator {
 
 	public int calculateTravelTime() {
 		int distance = attackerPosition.getApproxDistance(defenderPosition) - getWeapon().maxRange();
-		double frames = distance / attackerType.topSpeed();
+		double frames = Math.abs(distance / attackerType.topSpeed());
 		return (int) Math.ceil(frames);
+	}
+
+
+	public Velocity calculateRetreat() {
+		if(attackerGroup.getID() == 0){
+			defenderPosition = new Position(0,0);
+		}
+		else{
+			defenderPosition = new Position(1000,1000);
+		}
+		return calculateVelocity();
 	}
 }

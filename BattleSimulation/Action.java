@@ -6,9 +6,6 @@ public class Action {
 	private ActionType actionType;
 	private final int group1ID;
 	private final int group2ID;
-	//number of frames before a change in state will happen 
-	//eg group becomes idle - group begins to attack opposing group
-	private int framesUntilChange;
 	
 	public Action(ActionType actionType, int group1ID, int group2ID){
 		this.actionType = actionType;

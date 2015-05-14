@@ -16,8 +16,9 @@ public interface TreeNode {
 	boolean isMyDecision();//is true if it's a decision of the AI
 	void update(ExpectedValue ev);//updates a node and propagates the update back to the tree head
 	TreeNode chooseAction(Action action);
-	int generateChildren();
-	Hashtable<Integer, SimulationGroup> getGroups();
+	Child getChild(boolean myDecision);
+	void printProfiling();
+	int generateChildren(Hashtable<Integer, SimulationGroup> groups);
 	
 	
 	

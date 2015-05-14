@@ -1,8 +1,10 @@
 package uctMonteCarlo;
 
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import BattleSimulation.Action;
 import BattleSimulation.ExpectedValue;
@@ -24,17 +26,17 @@ public class LinkedListTreeNode implements TreeNode {
 	//false if it is controlled by the opposing player
 	private boolean myDecision;
 	//a representation of the groups before the decision is made
-	private Hashtable<Integer, SimulationGroup> groups;
 	private int decisionGroupID;
 	private SimulationController simulationController;
+	private long averageUpdateTime = 0, averagePlayoutTime = 0;
+	private int updates = 0, playouts = 0;
 	
-	public LinkedListTreeNode(Hashtable<Integer, SimulationGroup> groups,
-			SimulationController simulationController, int decisionGroupID,
+	public LinkedListTreeNode(SimulationController simulationController, int decisionGroupID,
 			int numberOfFramesSimulated){
-		this.groups = groups;
 		this.simulationController = simulationController;
 		this.decisionGroupID = decisionGroupID;
 		this.numberOfFramesSimulated = numberOfFramesSimulated;
+		this.children = new LinkedList<Child>();
 	}
 	
 	
@@ -103,37 +105,76 @@ public class LinkedListTreeNode implements TreeNode {
 	}
 
 	@Override
-	public int generateChildren() {
+	public int generateChildren(Hashtable<Integer, SimulationGroup> groups) {
+		
 		SimulationGroup decisionGroup = groups.get(decisionGroupID);
-		Action decisionAction = decisionGroup.getAction();
-		List<Action> actions = decisionGroup.generateActions();
-		LinkedList<Child> newChildren = new LinkedList<Child>();
-		if(actions.size() > 0){
-			for(Action action : actions){
-				decisionGroup.setAction(action);
-				simulationController.setFramesUntilStateChange(decisionGroup, action);
-				LinkedList<SimulationGroup> idleGroups = new LinkedList<SimulationGroup>();
-				Hashtable<Integer, SimulationGroup> nextGroups = simulationController.groupsForNextNode(groups, idleGroups);
-				int numberOfFrames = simulationController.getFramesSimulated();
-				int newDecisionGroupID = idleGroups.get(0).getID();
-				TreeNode newNode = new LinkedListTreeNode(nextGroups, simulationController,
-						newDecisionGroupID, numberOfFrames + numberOfFramesSimulated);
-				Child newChild = new Child(newNode, action);
-				newChildren.add(newChild);
+		if(decisionGroup != null){
+			List<Action> actions = decisionGroup.generateActions();		
+			if(actions.size() > 0){
+				for(Action action : actions){
+					Hashtable<Integer, SimulationGroup> cloneGroups = clone(groups);
+					SimulationGroup cloneDecisionGroup = groups.get(decisionGroupID);
+					cloneDecisionGroup.setAction(action);
+					simulationController.setFramesUntilStateChange(cloneDecisionGroup, action);
+					LinkedList<SimulationGroup> idleGroups = new LinkedList<SimulationGroup>();
+					simulationController.progressGroups(groups, idleGroups);
+					int numberOfFrames = simulationController.getFramesSimulated();
+					int newDecisionGroupID = -1;
+					if(!idleGroups.isEmpty()){
+						newDecisionGroupID = idleGroups.get(0).getID();
+					}
+					TreeNode newNode = new LinkedListTreeNode(simulationController,
+							newDecisionGroupID, numberOfFrames + numberOfFramesSimulated);
+					Child newChild = new Child(newNode, action);
+					children.add(newChild);
+				}
 			}
+			playAllChildrenOnce(groups);
+			return actions.size();
 		}
-		decisionGroup.setAction(decisionAction);
-		this.children = newChildren;
-		playAllChildrenOnce();
-		return actions.size();
+		else{
+			return 0;
+		}
 	}
 
-	private void playAllChildrenOnce() {
+	private Hashtable<Integer, SimulationGroup> clone(Hashtable<Integer, SimulationGroup> groups) {
+		Hashtable<Integer, SimulationGroup> result = new Hashtable<Integer, SimulationGroup>();
+		
+		Iterator<Entry<Integer, SimulationGroup>> groupIter = groups.entrySet().iterator();
+		while(groupIter.hasNext()){
+			SimulationGroup group = groupIter.next().getValue();
+			result.put(group.getID(), group.clone());
+			group.setPeers(result);
+		}
+		return result;
+	}
+
+
+	private void playAllChildrenOnce(Hashtable<Integer, SimulationGroup> groups) {
+		
 		for(Child child : children){
-			Hashtable<Integer, SimulationGroup> groups = child.node.getGroups();
-			ExpectedValue ev = simulationController.randomPlayout(groups, numberOfFramesSimulated, decisionGroupID);
-			child.node.update(ev);
+			Hashtable<Integer, SimulationGroup> cloneGroups = clone(groups);
+			SimulationGroup decisionGroup = cloneGroups.get(decisionGroupID);
+			decisionGroup.setAction(child.getAction());
+			LinkedList<SimulationGroup> idleGroups = new LinkedList<SimulationGroup>();
+			simulationController.progressGroups(cloneGroups, idleGroups);
+			long randomStart = 0;
+			randomStart = System.currentTimeMillis()-randomStart;
+			int cloneDecision = -1;
+			if(!idleGroups.isEmpty()){
+				cloneDecision = idleGroups.getFirst().getID();
+			}
+			ExpectedValue ev = simulationController.randomPlayout(cloneGroups, numberOfFramesSimulated, cloneDecision);
+			averagePlayoutTime = (averagePlayoutTime*playouts+randomStart)/(playouts+1);
+			playouts++;
 			
+			long start = System.currentTimeMillis();
+			
+			child.node.update(ev);
+
+			start = System.currentTimeMillis()-start;
+			averageUpdateTime = (averageUpdateTime*updates+start)/(updates+1);
+			updates++;
 		}
 	}
 
@@ -144,9 +185,37 @@ public class LinkedListTreeNode implements TreeNode {
 	}
 
 
+
 	@Override
-	public Hashtable<Integer, SimulationGroup> getGroups() {
-		return groups;
+	public Child getChild(boolean myDecision) {
+		Child currentMaxChild = children.get(0);	
+		double currentMaxValue = 0;
+		
+	
+		
+		for(int i=0;i<children.size();i++){
+			Child child = children.get(i);
+			double val = 0;
+			if(child.node.isMyDecision()){
+				val = child.node.getMyValue();
+			}
+			else{
+				val = child.node.getOpponentValue();
+			}
+					
+			if(val >currentMaxValue){
+				currentMaxChild = child;
+				currentMaxValue = val;				
+			}
+		}
+		return currentMaxChild;
+	}
+
+
+	@Override
+	public void printProfiling() {
+		System.out.println("average update time - " + averageUpdateTime);
+		System.out.println("average playout time - " + averagePlayoutTime);
 	}
 
 }

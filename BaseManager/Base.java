@@ -184,4 +184,14 @@ public class Base {//represents an expansion
 						
 		}
 	}
+
+	public void workerDestroyed(Unit unit) {
+		if(builderWorker.equals(unit)){
+			builderWorker = null;
+		}
+		else{
+			mineralMiningWorkers.remove(unit);
+			gasMiningWorkers.remove(unit);
+		}
+	}
 }

@@ -143,4 +143,11 @@ public class BaseManager {
 		}
 		return sum;
 	}
+
+	public void workerDestroyed(Unit unit) {
+		for(Base base : bases){
+			base.workerDestroyed(unit);
+		}
+		
+	}
 }

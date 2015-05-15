@@ -50,6 +50,9 @@ public class MyBot extends DefaultBWListener {
 				if(!unit.getType().isWorker()){
 					armyManager.unitDestroyed(unit);
 				}
+				else{
+					baseManager.workerDestroyed(unit);
+				}
 			}	
 		}
     	
@@ -123,8 +126,8 @@ public class MyBot extends DefaultBWListener {
         baseManager = new BaseManager(bases, game, buildOrder, hq);
         this.armyManager = new ArmyManager();
         intelManager = new IntelManager();
-        
-        game.setLocalSpeed(5);
+        attackLaunched = false;
+        game.setLocalSpeed(3);
     }
 	
 

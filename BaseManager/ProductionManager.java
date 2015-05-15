@@ -169,6 +169,17 @@ public class ProductionManager {
 		if(cyberneticsCoreCanUpgrade(upgrade)){
 			return cyberneticsCore.upgrade(upgrade);
 		}
+		else if(upgrade == UpgradeType.Singularity_Charge){
+			return cyberneticsCore.upgrade(upgrade);					
+		}
+		else if((upgrade == UpgradeType.Protoss_Ground_Weapons 
+				|| upgrade == UpgradeType.Protoss_Ground_Armor)
+				&& forges.size() > 0){
+			System.out.println("forge up!");
+			Unit forge =  forges.remove();
+			forges.add(forge);
+			return forge.upgrade(upgrade);
+		}
 		return false;
 	}
 
@@ -183,6 +194,10 @@ public class ProductionManager {
 		}
 		else if(buildingType == UnitType.Protoss_Cybernetics_Core){
 			setCyberneticsCore(building);
+		}
+		else if(buildingType == UnitType.Protoss_Forge){
+			System.out.println("forge found");
+			addForge(building);
 		}
 	}
 	

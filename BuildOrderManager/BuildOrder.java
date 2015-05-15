@@ -122,4 +122,8 @@ public class BuildOrder implements Queue<BuildOrderItem>{
 		}
 		return result;
 	}
+	
+	public void addToFront(BuildOrderItem item){
+		queue.addFirst(item);
+	}
 }

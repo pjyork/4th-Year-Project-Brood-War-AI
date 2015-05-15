@@ -14,7 +14,12 @@ public class UnitGroup {
 	//knowing which player controls the group is important for knowing upgrades
 	private Player controller;
 	private List<Unit> units;
+
 	private Position centre;
+	private boolean isFollowing;
+	private boolean isAttacking;
+	private Unit followedUnit;
+	private PositionOrUnit target;
 	
 	public UnitGroup(List<Unit> units){
 		this.units = units;
@@ -93,5 +98,42 @@ public class UnitGroup {
 
 	public int size() {
 		return units.size();
+	}
+
+	public void add(Unit unit) {
+		if(isFollowing){
+			unit.follow(followedUnit);
+		}
+		if(isAttacking){
+			unit.attack(target);
+		}
+		this.units.add(unit);		
+	}
+
+	public void attack(PositionOrUnit target) {
+		isAttacking = true;
+		isFollowing = false;
+		for(Unit unit : units){
+			unit.attack(target);
+		}
+		this.target = target;
+	}
+
+	public void follow(UnitGroup zealotGroup) {
+		isFollowing = true;
+		isAttacking = false;
+		Unit followUnit = zealotGroup.getRepresentative();
+		for(Unit unit : units){
+			unit.follow(followUnit);			
+		}
+		this.followedUnit = followUnit;
+	}
+
+	private Unit getRepresentative() {
+		return units.get(0);
+	}
+
+	public void unitDestroyed(Unit unit) {
+		units.remove(unit);
 	}
 }

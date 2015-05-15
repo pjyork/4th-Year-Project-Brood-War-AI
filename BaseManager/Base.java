@@ -30,6 +30,10 @@ public class Base {//represents an expansion
 		
 	}
 	
+	public int supplySupplied(){
+		return 20 + 16 * pylons.size();
+	}
+	
 	public Position getPosition(){
 		return hq.getPosition();
 		
@@ -54,7 +58,9 @@ public class Base {//represents an expansion
 		if(closestMineral!=null){
 			worker.gather(closestMineral);
 		}
-		mineralMiningWorkers.add(worker);
+		if(!mineralMiningWorkers.contains(worker)){
+			mineralMiningWorkers.add(worker);		
+		}
 	}
 	
 	private void build(UnitType buildingType){
@@ -98,6 +104,10 @@ public class Base {//represents an expansion
 				buildQueue.remove(0);
 			}
 		}
+
+		if(building.getType() == UnitType.Protoss_Pylon){
+			pylons.add(building);
+		}
 	}
 	
 	public void queueToBuild(UnitType buildingType){
@@ -129,8 +139,7 @@ public class Base {//represents an expansion
 	}
 
 	public void checkMiners() {
-		if(game.self().supplyUsed()==30 && gasMiningWorkers.isEmpty()){
-			System.out.println("gasgas");
+		if(game.self().supplyUsed()==28 && gasMiningWorkers.isEmpty()){
 			for(int i = 0; i < 3; i++){
 				sendToMineGas(mineralMiningWorkers.remove(0));
 			}			
@@ -141,37 +150,32 @@ public class Base {//represents an expansion
 			}
 		}
 		for(Unit worker : gasMiningWorkers){
-			sendToMineGas(worker);
+			if(!worker.isGatheringGas()){
+				sendToMineGas(worker);
+			}
 		}
 	}
 
 	private void sendToMineGas(Unit worker) {
-		System.out.println("GAS");
-		gasMiningWorkers.add(worker);
-		if(!(assim == null) && !assim.isBeingConstructed()){
-			System.out.println("check gas miners");
-			//send worker to mine minerals at this base
-			Unit closestGeyser = null;
-			
-			for (Unit neutralUnit : game.neutral().getUnits()) {
-	             if (neutralUnit.getType() == UnitType.Resource_Vespene_Geyser) {
-	                 if (closestGeyser == null || hq.getDistance(neutralUnit) < hq.getDistance(closestGeyser)) {
-	                     closestGeyser = neutralUnit;
-	                 }
-	             }
-	        }
-			if(closestGeyser!=null){
-				System.out.println(worker.toString() + closestGeyser);
-				worker.gather(closestGeyser);
-			}
+		if(!gasMiningWorkers.contains(worker)){
+			gasMiningWorkers.add(worker);
+		}
+		//send worker to mine minerals at this base
+		Unit closestGeyser = null;
+		
+		for (Unit neutralUnit : game.self().getUnits()) {
+             if (neutralUnit.getType() == UnitType.Protoss_Assimilator) {
+                 if (closestGeyser == null || hq.getDistance(neutralUnit) < hq.getDistance(closestGeyser)) {
+                     closestGeyser = neutralUnit;
+                 }
+             }
+        }
+		if(closestGeyser!=null){
+			worker.gather(closestGeyser);
 		} 
 	}
 
 	public void buildingComplete(Unit building) {
-		if(building.getType() == UnitType.Protoss_Pylon){
-			pylons.add(building);
-		}
-		System.out.println(building.getType());
 		if(building.getType().isRefinery()){
 			this.assim = building;
 			for(int i = 0; i < 3; i++){

@@ -54,11 +54,14 @@ public class BaseManager {
 		boolean resourcesRemain = true;
 		while(!buildOrder.isEmpty() && resourcesRemain){
 			BuildOrderItem toBuild = buildOrder.peek();
+			String toBuildString = "";
 			if(toBuild.isUnitOrBuilding()){
 				resourcesRemain = queueToBuild(toBuild.unitItem());
+				toBuildString = toBuild.unitItem().toString();
 			}
 			else{
 				resourcesRemain = queueToUpgrade(toBuild.upgradeItem());
+				toBuildString = toBuild.upgradeItem().toString();
 			}
 			
 			if(resourcesRemain){
@@ -72,15 +75,13 @@ public class BaseManager {
 		int mineralsRemaining = mineralsRemaining();
 		int gasRemaining = gasRemaining();
 		if(mineralsRemaining > upgrade.mineralPrice() && gasRemaining > upgrade.gasPrice()){
-			buildOrder.remove();
-			researchUpgrade(upgrade);
-			return true;
+			return researchUpgrade(upgrade);
 		}
 		return false;
 	}
 
-	private void researchUpgrade(UpgradeType upgrade) {
-		productionManager.researchUpgrade(upgrade);
+	private boolean researchUpgrade(UpgradeType upgrade) {
+		return productionManager.researchUpgrade(upgrade);
 	}
 
 	private boolean queueToBuild(UnitType unit) {
@@ -92,14 +93,14 @@ public class BaseManager {
 				mainBase.queueToBuild(unit);
 				spentGas += unit.gasPrice();
 				spentMinerals += unit.mineralPrice();
+				return true;
 			}
 			else{
 				if(unit.supplyRequired() > me.supplyTotal() - me.supplyUsed()){
 					return false;
 				}
-				productionManager.buildUnit(unit);
+				return productionManager.buildUnit(unit);
 			}
-			return true;
 		}
 		return false;
 	}
@@ -121,7 +122,6 @@ public class BaseManager {
 			for (Base base : bases){
 				base.buildingCreate(building);
 			}
-			System.out.println(" building created - " + building.getType());
 			spentMinerals -= building.getType().mineralPrice();
 			spentGas -= building.getType().gasPrice();	
 		}
@@ -134,5 +134,13 @@ public class BaseManager {
 			}
 			productionManager.buildingCompleted(building);
 		}		
+	}
+
+	public int getTotalSupply() {
+		int sum = 0;
+		for(Base base : bases){
+			sum += base.supplySupplied();
+		}
+		return sum;
 	}
 }

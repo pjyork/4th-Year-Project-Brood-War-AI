@@ -1,21 +1,42 @@
 package ArmyManager;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import bwapi.Position;
+import bwapi.PositionOrUnit;
 import bwapi.Unit;
+import bwapi.UnitType;
 import bwapi.Unitset;
 
 public class Army {
 	private List<Unit> units;
-	private List<UnitGroup> unitGroups;
+	private UnitGroup zealotGroup;
+	private UnitGroup dragoonGroup;
+	private boolean isAttacking;
+	private PositionOrUnit target;
+	
+	public Army(){
+	}	
 	
 	public void move(Position target){
 		
 	}
 	
-	public void attack(Unit target){
-		
+	public void attack(PositionOrUnit target){
+		isAttacking = true;
+		if(!(zealotGroup == null)){
+			zealotGroup.attack(target);
+		}
+		if(!(dragoonGroup == null)){
+			if(target.isUnit()){
+				dragoonGroup.attack(target);
+			}
+			else if(zealotGroup != null){
+				dragoonGroup.follow(zealotGroup);
+			}
+		}
+		this.target = target;
 	}
 	
 	
@@ -43,4 +64,81 @@ public class Army {
 			unit.move(targetPos);
 		}
 	}
+
+	public void addUnit(Unit unit) {
+		if(unit.getType() == UnitType.Protoss_Zealot){
+			if(zealotGroup == null){
+				generateZealotGroup(unit);
+			}
+			zealotGroup.add(unit);
+			if(isAttacking){
+				zealotGroup.attack(target);
+			}
+		}
+		else{
+			if(dragoonGroup == null){
+				generateDragoonGroup(unit);
+			}
+			dragoonGroup.add(unit);
+			if(isAttacking){
+				dragoonGroup.attack(target);
+			}
+		}
+		
+	}
+	
+	private void generateDragoonGroup(Unit unit) {
+		LinkedList<Unit> unitss = new LinkedList<Unit>();
+		unitss.add(unit);
+		dragoonGroup = new UnitGroup(unitss);
+	}
+
+	private void generateZealotGroup(Unit unit) {
+		LinkedList<Unit> unitss = new LinkedList<Unit>();
+		unitss.add(unit);
+		zealotGroup = new UnitGroup(unitss);
+	}
+
+	public int getSize(){
+		int size = 0;
+		if(zealotGroup != null){
+			size += zealotGroup.size();
+		}
+		if(dragoonGroup != null){
+			size += dragoonGroup.size();
+		}
+		return size;
+	}
+
+	public Position getPosition() {
+		int posX = 0, posY = 0;
+		if(zealotGroup != null){
+			Position zealPos = zealotGroup.getCentre();
+			posX = zealPos.getX();
+			posY = zealPos.getY();
+			if(dragoonGroup != null){
+				Position dragPos = dragoonGroup.getCentre();
+				posX = (posX + dragPos.getX()) /2 ;
+				posY = (posX + dragPos.getY()) /2 ;
+			}
+		}
+		else if(dragoonGroup != null){
+			Position dragPos = dragoonGroup.getCentre();
+			posX = posX + dragPos.getX();
+			posY = posX + dragPos.getY();
+			
+		}
+		
+		return new Position(posX, posY);
+	}
+
+	public void unitDestroyed(Unit unit) {
+		if(unit.getType() == UnitType.Protoss_Zealot){
+			zealotGroup.unitDestroyed(unit);
+		}
+		else{
+			dragoonGroup.unitDestroyed(unit);
+		}
+	}
+
 }

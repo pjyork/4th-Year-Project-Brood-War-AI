@@ -24,7 +24,7 @@ public class BuildingPlacer {
 		boolean locFound = false;
 		int i = 1, dir = 0;
 		TilePosition loc = new TilePosition(-1,-1);
-		while(!locFound&&i<10){
+		while(!locFound && i < 2){
 			switch (dir){
 				case 0: loc = new TilePosition(hq.getTilePosition().getX(),hq.getTilePosition().getY()-7*i);
 						break;
@@ -35,6 +35,24 @@ public class BuildingPlacer {
 				case 3: loc = new TilePosition(hq.getTilePosition().getX()-7*i,hq.getTilePosition().getY());
 						break;
 			}
+			if(game.canBuildHere(loc, UnitType.Protoss_Pylon)){
+				locFound = true;
+			}
+			else if(dir<3){dir++;}
+			else{i++; dir = 0;}
+		}
+		i=1;
+		while(!locFound && i < 10){
+			switch (dir){
+				case 0: loc = new TilePosition(hq.getTilePosition().getX(),hq.getTilePosition().getY()-7 - 2 * i);
+					break;
+				case 1: loc = new TilePosition(hq.getTilePosition().getX()+4+7 + 2*i,hq.getTilePosition().getY());
+						break;
+				case 2: loc = new TilePosition(hq.getTilePosition().getX(),hq.getTilePosition().getY()+3+7 + 2*i);
+						break;
+				case 3: loc = new TilePosition(hq.getTilePosition().getX() -7 - 2* i,hq.getTilePosition().getY());
+						break;
+				}
 			if(game.canBuildHere(loc, UnitType.Protoss_Pylon)){
 				locFound = true;
 			}
@@ -80,6 +98,9 @@ public class BuildingPlacer {
 				}
 				maxDist += 2;
 			}
+		}
+		if(ret == null){
+			System.out.println(" loc not found!");
 		}
 		return ret;
 	}

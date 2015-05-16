@@ -3,14 +3,17 @@ package IntelManager;
 import java.util.LinkedList;
 
 import bwapi.Position;
+import bwapi.PositionOrUnit;
 import bwapi.Unit;
 import bwapi.UnitType;
 
 public class IntelManager {
 	private LinkedList<Unit> enemyUnits;
+	private Position opponentStart;
 	
-	public IntelManager(){
+	public IntelManager(Position opponentStart){
 		enemyUnits = new LinkedList<Unit>();
+		this.opponentStart = opponentStart;
 	}
 	
 	public void addEnemyUnit(Unit unit){
@@ -21,20 +24,41 @@ public class IntelManager {
 		enemyUnits.remove(unit);
 	}
 
-	public Unit getNearestUnit(Position armyPosition) {
+	public PositionOrUnit getNearestUnit(Position armyPosition) {
 		int shortestDist = Integer.MAX_VALUE;
 		Unit result = null;
 		for(Unit enemy : enemyUnits){
 			int dist = enemy.getPosition().getApproxDistance(armyPosition);
-			if(dist < shortestDist){
+			if(dist < shortestDist && enemy.isTargetable()){
 				shortestDist = dist;
 				result = enemy;
 			}
 		}
-		UnitType t = result.getType();
-		if(t.isWorker() || t.isBuilding() || t == UnitType.Zerg_Overlord){
-			return null;
+		if(result == null){
+			return new PositionOrUnit(opponentStart);
 		}
-		return result;
+		UnitType t = result.getType();
+		return new PositionOrUnit(result);
+	}
+
+	public Position getEnemyHQ() {
+		return opponentStart;		
+	}
+
+	public PositionOrUnit getTarget() {
+		PositionOrUnit result = null;
+		while(!enemyUnits.isEmpty() && result == null){
+			Unit unit = enemyUnits.getFirst();
+			if(unit.getHitPoints() >= 0){
+				result = new PositionOrUnit(enemyUnits.getFirst().getPosition());
+				enemyUnits.removeFirst();	
+			}
+			else{
+			}
+		}
+		if(result == null){
+			result = new PositionOrUnit(opponentStart);
+		}
+		return result;		
 	}
 }

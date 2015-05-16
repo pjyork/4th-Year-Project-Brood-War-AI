@@ -3,6 +3,7 @@ package ArmyManager;
 import java.util.LinkedList;
 import java.util.List;
 
+import IntelManager.IntelManager;
 import bwapi.Position;
 import bwapi.PositionOrUnit;
 import bwapi.Unit;
@@ -135,9 +136,36 @@ public class Army {
 	public void unitDestroyed(Unit unit) {
 		if(unit.getType() == UnitType.Protoss_Zealot){
 			zealotGroup.unitDestroyed(unit);
+			dragoonGroup.attack(target);
 		}
 		else{
 			dragoonGroup.unitDestroyed(unit);
+		}
+	}
+
+	public void check(IntelManager intelManager) {
+		Position targett = intelManager.getEnemyHQ();
+		if(zealotGroup != null){
+			if(zealotGroup.allIdle()){
+				if(zealotGroup.getCentre().getApproxDistance(targett) < 15){
+					System.out.println("attackingUnit zeal");
+					zealotGroup.attack(intelManager.getNearestUnit(zealotGroup.getCentre()));
+				}	
+				else{
+					zealotGroup.attack(new PositionOrUnit(targett));
+				}
+			}
+		}
+		if(dragoonGroup != null){
+			if(dragoonGroup.allIdle()){
+				if(dragoonGroup.getCentre().getApproxDistance(targett) < 15){
+					System.out.println("attackingUnit goon");
+					dragoonGroup.attack(intelManager.getNearestUnit(dragoonGroup.getCentre()));
+				}
+				else{
+					dragoonGroup.attack(new PositionOrUnit(targett));
+				}
+			}
 		}
 	}
 

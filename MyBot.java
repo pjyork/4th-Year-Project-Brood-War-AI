@@ -20,9 +20,12 @@ public class MyBot extends DefaultBWListener {
     private BuildOrderManager buildOrderManager;
     private BaseManager baseManager;
     private ArmyManager armyManager;
-    private BaseLocation enemyStart;
+    private BaseLocation opponentStart;
     private IntelManager intelManager;
     private boolean attackLaunched = false;
+    private Race opponentRace;
+
+	private boolean hqDestroyed;
     
     public void run() {
         mirror.getModule().setEventListener(this);
@@ -33,16 +36,17 @@ public class MyBot extends DefaultBWListener {
     public void onUnitDestroy(Unit unit){
 		if(unit.getPlayer() != self && unit.getPlayer() != game.neutral()){
 			intelManager.removeUnit(unit);
-			Position armyPosition = armyManager.getPosition();
-			Unit newTarget = intelManager.getNearestUnit(armyPosition);
-			System.out.println("this died - " + unit.getType());
-			if(newTarget != null){
-				System.out.println("new target  - " + newTarget.getType());
-				armyManager.attack(new PositionOrUnit(newTarget));
+			boolean hqDestroyed = unit.getType().isResourceDepot() && unit.getTilePosition().equals(opponentStart.getTilePosition());
+			if(hqDestroyed || this.hqDestroyed){
+				this.hqDestroyed = hqDestroyed;
+				System.out.println("here we go");
+				PositionOrUnit newTarget = intelManager.getTarget();
+				System.out.println(newTarget.getPosition().toString());
+				armyManager.attack(newTarget);
 			}
 			else{
-				System.out.println("attack again!");
-				armyManager.attack(enemyStart.getPosition());
+				/*System.out.println("attack again!");
+				armyManager.attack(enemyStart.getPosition());*/				
 			}
 		}
 		else{
@@ -69,12 +73,17 @@ public class MyBot extends DefaultBWListener {
 		else{
 			armyManager.addUnit(unit);
 		}
-		/*if(unit.getPlayer() != self && unit.getPlayer() != game.neutral()){
-			armyManager.attack(new PositionOrUnit(unit));
+		if(unit.getPlayer() != self && unit.getPlayer() != game.neutral()  && !unit.isCloaked()){
+			//armyManager.attack(new PositionOrUnit(unit));
 			intelManager.addEnemyUnit(unit);
-		}*/
+		}
     }
 	
+    @Override
+    public void onUnitDiscover(Unit unit){
+    	
+    }
+    
 	@Override
 	public void onUnitCreate(Unit unit){
 		if(unit.getType().isBuilding()){
@@ -109,13 +118,17 @@ public class MyBot extends DefaultBWListener {
         	System.out.println(startSpot.getTilePosition().toString());
         	System.out.println(hq.getTilePosition().toString());
         	if(!(Math.abs(startSpotX - hq.getTilePosition().getX()) < 10)){
-        		enemyStart = startSpot;
+        		opponentStart = startSpot;
         	}
         }
         List<Player> players  = game.getPlayers();
         for(Player player : players){
+        	System.out.println(player.getID());
+    		System.out.println(player.getRace());
         	if(player.isEnemy(self) && opponent == null){
         		opponent = player;
+        		opponentRace = player.getRace();
+        		System.out.println(opponentRace);
         	}
         }
         buildOrderManager = new BuildOrderManager(2, opponent.getRace());
@@ -124,10 +137,10 @@ public class MyBot extends DefaultBWListener {
         Base base = new Base(hq,game);
         bases.add(base);
         baseManager = new BaseManager(bases, game, buildOrder, hq);
-        this.armyManager = new ArmyManager();
-        intelManager = new IntelManager();
+        intelManager = new IntelManager(opponentStart.getPosition());
+        this.armyManager = new ArmyManager(intelManager);
         attackLaunched = false;
-        game.setLocalSpeed(3);
+        game.setLocalSpeed(5);
     }
 	
 
@@ -140,13 +153,49 @@ public class MyBot extends DefaultBWListener {
         	int predictedSupply = baseManager.getTotalSupply();
         	buildOrderManager.updateBuildOrder(predictedSupply - self.supplyUsed());
         	int size = armyManager.size();
-        	System.out.println("army size" + size + "  attack launched - " + attackLaunched);
-            if(armyManager.size() >= 16 && !attackLaunched){
-                System.out.println("nerd");
-            	
-            	armyManager.attack(enemyStart.getPosition());
-            	attackLaunched = true;
-            }       
+        	if(!attackLaunched){
+	        	//System.out.println("army size" + size + "  attack launched - " + attackLaunched);
+	    		//System.out.println(opponentRace);
+        	}
+        	if(opponentRace == Race.Terran){
+	        	if(armyManager.size() >= 16 && !attackLaunched){
+	                System.out.println("nerd");
+	            	
+	            	armyManager.attack(opponentStart.getPosition());
+	            	attackLaunched = true;
+	        		game.setLocalSpeed(10);
+	            }       
+        	}
+        	else if(opponentRace == Race.Zerg){
+        		if(armyManager.size() >= 19 && !attackLaunched){
+	            	
+	            	armyManager.attack(opponentStart.getPosition());
+	            	attackLaunched = true;
+	        		game.setLocalSpeed(10);
+        			
+        		}
+        	}
+        	else if(opponentRace == Race.Protoss){
+        		if(armyManager.size() >= 19 && !attackLaunched){
+	            	
+	            	armyManager.attack(opponentStart.getPosition());
+	            	attackLaunched = true;
+	        		game.setLocalSpeed(5);
+        			
+        		}
+        	}
+        	else {
+        		if(armyManager.size() >= 22 && !attackLaunched){
+	            	
+	            	armyManager.attack(opponentStart.getPosition());
+	            	attackLaunched = true;
+	        		game.setLocalSpeed(10);
+        			
+        		}
+        	}
+        	if(attackLaunched){
+        		armyManager.checkArmies();
+        	}
         }
     }
 

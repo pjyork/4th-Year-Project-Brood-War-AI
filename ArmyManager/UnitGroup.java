@@ -135,5 +135,19 @@ public class UnitGroup {
 
 	public void unitDestroyed(Unit unit) {
 		units.remove(unit);
+		for(Unit unitt : units){
+			if(unitt.getHitPoints() <= 0){
+				units.remove(unitt);
+			}
+		}
+	}
+
+
+	public boolean allIdle() {
+		boolean allIdle = true;
+		for(Unit unit : units){
+			allIdle =  allIdle && unit.isIdle();
+		}
+		return allIdle;
 	}
 }

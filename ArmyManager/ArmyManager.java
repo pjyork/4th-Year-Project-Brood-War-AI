@@ -14,12 +14,16 @@ public class ArmyManager {
 	private IntelManager intelManager;
 	
 
-	public ArmyManager(){
+	public ArmyManager(IntelManager intelManager){
 		this.armies = new LinkedList<Army>();
 		this.armies.add(new Army());
+		this.intelManager = intelManager;
 	}
 	
 	public void checkArmies(){
+		for(Army army : armies){
+			army.check(intelManager);
+		}
 	}
 	
 	public void addUnit(Unit unit) {

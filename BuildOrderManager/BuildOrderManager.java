@@ -67,8 +67,8 @@ public class BuildOrderManager {
 			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
 			newBuildOrder.queueWorkers(2);
 			newBuildOrder.queueWorkers(1);
-			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
 			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
 			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
 			newBuildOrder.queueWorkers(1);
 			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));

@@ -58,7 +58,7 @@ public class BuildOrderManager {
 
 		}
 		else if(opponentRace.equals(Race.Zerg)
-				|| opponentRace.equals(Race.Protoss)
+				||opponentRace.equals(Race.Protoss)
 				|| opponentRace.equals(Race.Random)
 				|| opponentRace.equals(Race.Unknown)){
 			newBuildOrder.queueWorkers(4);
@@ -96,6 +96,43 @@ public class BuildOrderManager {
 			newBuildOrder.queueWorkers(2);
 			
 		}
+		else if(opponentRace.equals(Race.Zerg)){
+			newBuildOrder.queueWorkers(4);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
+			newBuildOrder.queueWorkers(2);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
+			newBuildOrder.queueWorkers(2);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Assimilator));
+			newBuildOrder.queueWorkers(1);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Cybernetics_Core));
+			newBuildOrder.queueWorkers(1);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
+			newBuildOrder.queueWorkers(3);
+			newBuildOrder.add(new BuildOrderItem(UpgradeType.Singularity_Charge));
+			newBuildOrder.queueWorkers(2);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
+			newBuildOrder.queueWorkers(2);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Pylon));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Gateway));
+			newBuildOrder.queueWorkers(2);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+			newBuildOrder.queueWorkers(2);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+			newBuildOrder.queueWorkers(2);
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
+			newBuildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
+		}
 		else if(opponentRace.equals(Race.Protoss)){
 			
 		}
@@ -125,7 +162,7 @@ public class BuildOrderManager {
 			}
 		}
 		if(buildOrder.size() < 10){
-			if(opponentRace == Race.Terran){
+			if(opponentRace == Race.Terran || opponentRace == Race.Zerg){
 				buildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
 				buildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
 				buildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));

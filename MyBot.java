@@ -125,7 +125,7 @@ public class MyBot extends DefaultBWListener {
         for(Player player : players){
         	System.out.println(player.getID());
     		System.out.println(player.getRace());
-        	if(player.isEnemy(self) && opponent == null){
+        	if(player.isEnemy(self) && !player.equals(self) && opponent == null){
         		opponent = player;
         		opponentRace = player.getRace();
         		System.out.println(opponentRace);
@@ -158,7 +158,7 @@ public class MyBot extends DefaultBWListener {
 	    		//System.out.println(opponentRace);
         	}
         	if(opponentRace == Race.Terran){
-	        	if(armyManager.size() >= 16 && !attackLaunched){
+	        	if(armyManager.size() >= 19 && !attackLaunched){
 	                System.out.println("nerd");
 	            	
 	            	armyManager.attack(opponentStart.getPosition());
@@ -195,6 +195,9 @@ public class MyBot extends DefaultBWListener {
         	}
         	if(attackLaunched){
         		armyManager.checkArmies();
+        	}
+        	if(self.supplyUsed() > 240){
+        		
         	}
         }
     }

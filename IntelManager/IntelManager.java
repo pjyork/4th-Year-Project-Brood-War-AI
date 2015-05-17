@@ -51,9 +51,11 @@ public class IntelManager {
 			Unit unit = enemyUnits.getFirst();
 			if(unit.getHitPoints() >= 0){
 				result = new PositionOrUnit(enemyUnits.getFirst().getPosition());
-				enemyUnits.removeFirst();	
+				Unit enemy  = enemyUnits.removeFirst();	
+				enemyUnits.addLast(enemy);
 			}
 			else{
+				enemyUnits.remove(unit);
 			}
 		}
 		if(result == null){

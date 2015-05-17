@@ -139,7 +139,7 @@ public class Base {//represents an expansion
 	}
 
 	public void checkMiners() {
-		if(game.self().supplyUsed()==28 && gasMiningWorkers.isEmpty()){
+		if(game.self().supplyUsed()== 28 && gasMiningWorkers.isEmpty()){
 			for(int i = 0; i < 3; i++){
 				sendToMineGas(mineralMiningWorkers.remove(0));
 			}			

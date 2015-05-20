@@ -1,27 +1,45 @@
 package IntelManager;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import bwapi.Position;
 import bwapi.PositionOrUnit;
 import bwapi.Unit;
 import bwapi.UnitType;
+import bwta.BaseLocation;
 
 public class IntelManager {
 	private LinkedList<Unit> enemyUnits;
+	private LinkedList<Unit> enemyBuildings;
 	private Position opponentStart;
+	private LinkedList<Position> enemyBuildingPositions;
 	
 	public IntelManager(Position opponentStart){
 		enemyUnits = new LinkedList<Unit>();
+		enemyBuildings = new LinkedList<Unit>();
+		enemyBuildingPositions = new LinkedList<Position>();
 		this.opponentStart = opponentStart;
 	}
 	
 	public void addEnemyUnit(Unit unit){
-		enemyUnits.add(unit);
+		if(unit.getType().isBuilding()){
+			enemyBuildings.add(unit);
+			enemyBuildingPositions.add(unit.getPosition());
+		}
+		else{
+			enemyUnits.add(unit);
+		}
 	}
 
 	public void removeUnit(Unit unit) {
-		enemyUnits.remove(unit);
+		if(unit.getType().isBuilding()){
+			enemyBuildings.remove(unit);
+			//enemyBuildingPositions.remove(unit.getPosition());
+		}
+		else{
+			enemyUnits.remove(unit);
+		}
 	}
 
 	public PositionOrUnit getNearestUnit(Position armyPosition) {
@@ -47,20 +65,28 @@ public class IntelManager {
 
 	public PositionOrUnit getTarget() {
 		PositionOrUnit result = null;
-		while(!enemyUnits.isEmpty() && result == null){
-			Unit unit = enemyUnits.getFirst();
-			if(unit.getHitPoints() >= 0){
-				result = new PositionOrUnit(enemyUnits.getFirst().getPosition());
-				Unit enemy  = enemyUnits.removeFirst();	
-				enemyUnits.addLast(enemy);
-			}
-			else{
-				enemyUnits.remove(unit);
-			}
+		if(!enemyBuildings.isEmpty()){
+			
+		}
+		if(!enemyBuildingPositions.isEmpty() && result == null){
+			result = new PositionOrUnit(enemyBuildingPositions.getFirst());
+			Position enemy  = enemyBuildingPositions.removeFirst();	
+			enemyBuildingPositions.addLast(enemy);
 		}
 		if(result == null){
 			result = new PositionOrUnit(opponentStart);
 		}
 		return result;		
+	}
+
+	public void addLocations(List<BaseLocation> baseLocations) {
+		for(BaseLocation baseLoc: baseLocations){
+			System.out.println("added - " + baseLoc.getPosition().toString());
+			enemyBuildingPositions.add(baseLoc.getPosition());
+		}		
+		for(Position pos : enemyBuildingPositions){
+			System.out.println("positions - " + pos.toString());
+			
+		}
 	}
 }

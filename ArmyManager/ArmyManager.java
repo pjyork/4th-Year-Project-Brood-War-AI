@@ -12,22 +12,34 @@ public class ArmyManager {
 	private List<Army> armies;
 	private boolean isMoving;
 	private IntelManager intelManager;
+	private int launchSize;
+	private Army newArmy;
 	
 
-	public ArmyManager(IntelManager intelManager){
+	public ArmyManager(IntelManager intelManager, int launchSize){
 		this.armies = new LinkedList<Army>();
-		this.armies.add(new Army());
+		this.newArmy = new Army();
+		this.armies.add(newArmy);
 		this.intelManager = intelManager;
+		this.launchSize = launchSize;
 	}
 	
 	public void checkArmies(){
+		boolean armyAdded = false;
 		for(Army army : armies){
-			army.check(intelManager);
+			if(army.getSize() > launchSize && !army.attackLaunched()){
+				army.attack(new PositionOrUnit(intelManager.getEnemyHQ()));
+				armyAdded = true;
+			}
+		}
+		if(armyAdded){
+			newArmy = new Army();
+			this.armies.add(newArmy);
 		}
 	}
 	
 	public void addUnit(Unit unit) {
-		armies.get(0).addUnit(unit);
+		newArmy.addUnit(unit);
 	}
 	public int size(){
 		int sum = 0;

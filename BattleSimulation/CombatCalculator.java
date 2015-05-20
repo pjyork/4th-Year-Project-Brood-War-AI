@@ -63,7 +63,7 @@ class CombatCalculator {
 		double multiplier = getMultiplier(weapon);
 		double hitChance = getHitChance();
 		//compute the damage per hit, then multiply it by the chance to hit
-		double damagePerAttack = Math.max((damage-armor)*factor*multiplier,1)*hitChance;
+		double damagePerAttack = Math.max((damage-armor)*hitChance*multiplier,1)*factor;
 		//frames between attacks
 		int cooldown = getCooldown(weapon);
 		return damagePerAttack / cooldown;

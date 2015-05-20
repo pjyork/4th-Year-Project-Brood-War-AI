@@ -42,7 +42,7 @@ public class BuildingPlacer {
 			else{i++; dir = 0;}
 		}
 		i=1;
-		while(!locFound && i < 10){
+		while(!locFound && i < 100){
 			switch (dir){
 				case 0: loc = new TilePosition(hq.getTilePosition().getX(),hq.getTilePosition().getY()-7 - 2 * i);
 					break;

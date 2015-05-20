@@ -150,4 +150,10 @@ public class BaseManager {
 		}
 		
 	}
+
+	public void buildingDestroyed(Unit unit) {
+		for(Base base : bases){
+			base.buildingDestroyed(unit);
+		}		
+	}
 }

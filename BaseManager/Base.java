@@ -194,4 +194,10 @@ public class Base {//represents an expansion
 			gasMiningWorkers.remove(unit);
 		}
 	}
+
+	public void buildingDestroyed(Unit unit) {
+		if(unit.getType() == UnitType.Protoss_Pylon){
+			pylons.remove(unit);
+		}
+	}
 }

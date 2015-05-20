@@ -162,7 +162,7 @@ public class BuildOrderManager {
 			}
 		}
 		if(buildOrder.size() < 10){
-			if(opponentRace == Race.Terran || opponentRace == Race.Zerg){
+			if(opponentRace == Race.Terran){
 				buildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));
 				buildOrder.add(new BuildOrderItem(UnitType.Protoss_Dragoon));
 				buildOrder.add(new BuildOrderItem(UnitType.Protoss_Zealot));

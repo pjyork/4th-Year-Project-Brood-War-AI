@@ -16,8 +16,10 @@ public class Army {
 	private UnitGroup dragoonGroup;
 	private boolean isAttacking;
 	private PositionOrUnit target;
+	private boolean attackLaunched;
 	
 	public Army(){
+		attackLaunched = false;
 	}	
 	
 	public void move(Position target){
@@ -26,16 +28,18 @@ public class Army {
 	
 	public void attack(PositionOrUnit target){
 		isAttacking = true;
+		attackLaunched = true;
 		if(!(zealotGroup == null)){
 			zealotGroup.attack(target);
 		}
 		if(!(dragoonGroup == null)){
-			if(target.isUnit()){
+			/*(if(target.isUnit()){
 				dragoonGroup.attack(target);
 			}
 			else if(zealotGroup != null){
 				dragoonGroup.follow(zealotGroup);
-			}
+			}*/
+			dragoonGroup.attack(target);
 		}
 		this.target = target;
 	}
@@ -135,11 +139,14 @@ public class Army {
 
 	public void unitDestroyed(Unit unit) {
 		if(unit.getType() == UnitType.Protoss_Zealot){
-			zealotGroup.unitDestroyed(unit);
-			dragoonGroup.attack(target);
+			if(zealotGroup != null){
+				zealotGroup.unitDestroyed(unit);
+			}
 		}
 		else{
-			dragoonGroup.unitDestroyed(unit);
+			if (dragoonGroup != null){
+				dragoonGroup.unitDestroyed(unit);
+			}
 		}
 	}
 
@@ -167,6 +174,10 @@ public class Army {
 				}
 			}
 		}
+	}
+
+	public boolean attackLaunched() {
+		return attackLaunched;
 	}
 
 }

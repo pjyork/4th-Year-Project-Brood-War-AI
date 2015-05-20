@@ -24,8 +24,11 @@ public class MyBot extends DefaultBWListener {
     private IntelManager intelManager;
     private boolean attackLaunched = false;
     private Race opponentRace;
-
+    private List<BaseLocation> baseLocations;
+    
 	private boolean hqDestroyed;
+	private int timer;
+	private int timerTwo;
     
     public void run() {
         mirror.getModule().setEventListener(this);
@@ -37,12 +40,21 @@ public class MyBot extends DefaultBWListener {
 		if(unit.getPlayer() != self && unit.getPlayer() != game.neutral()){
 			intelManager.removeUnit(unit);
 			boolean hqDestroyed = unit.getType().isResourceDepot() && unit.getTilePosition().equals(opponentStart.getTilePosition());
-			if(hqDestroyed || this.hqDestroyed){
-				this.hqDestroyed = hqDestroyed;
-				System.out.println("here we go");
+			if(hqDestroyed && !this.hqDestroyed){
+				this.baseLocations = BWTA.getBaseLocations();
+				this.hqDestroyed = true;
+				System.out.println("here we go!!");
 				PositionOrUnit newTarget = intelManager.getTarget();
 				System.out.println(newTarget.getPosition().toString());
 				armyManager.attack(newTarget);
+				intelManager.addLocations(this.baseLocations);
+				game.setLocalSpeed(5);
+			}
+			else if(this.hqDestroyed){
+				System.out.println("here we go!!");
+				PositionOrUnit newTarget = intelManager.getTarget();
+				System.out.println(newTarget.getPosition().toString());
+				armyManager.attack(newTarget);				
 			}
 			else{
 				/*System.out.println("attack again!");
@@ -58,6 +70,9 @@ public class MyBot extends DefaultBWListener {
 					baseManager.workerDestroyed(unit);
 				}
 			}	
+			else{
+				baseManager.buildingDestroyed(unit);
+			}
 		}
     	
     }
@@ -73,15 +88,19 @@ public class MyBot extends DefaultBWListener {
 		else{
 			armyManager.addUnit(unit);
 		}
-		if(unit.getPlayer() != self && unit.getPlayer() != game.neutral()  && !unit.isCloaked()){
+		/*if(unit.getPlayer() != self && unit.getPlayer() != game.neutral()  && !unit.isCloaked()){
 			//armyManager.attack(new PositionOrUnit(unit));
 			intelManager.addEnemyUnit(unit);
-		}
+		}*/
     }
 	
     @Override
     public void onUnitDiscover(Unit unit){
-    	
+
+		if(unit.getPlayer() != self && unit.getPlayer() != game.neutral()  && !unit.isCloaked()){
+			//armyManager.attack(new PositionOrUnit(unit));
+			intelManager.addEnemyUnit(unit);
+		}
     }
     
 	@Override
@@ -125,22 +144,25 @@ public class MyBot extends DefaultBWListener {
         for(Player player : players){
         	System.out.println(player.getID());
     		System.out.println(player.getRace());
-        	if(player.isEnemy(self) && !player.equals(self) && opponent == null){
+        	if(player.isEnemy(self) && !player.equals(self) && opponent == null && player.getID()<2){
         		opponent = player;
         		opponentRace = player.getRace();
         		System.out.println(opponentRace);
         	}
         }
-        buildOrderManager = new BuildOrderManager(2, opponent.getRace());
+        buildOrderManager = new BuildOrderManager(2, opponentRace);
         BuildOrder buildOrder = buildOrderManager.getBuildOrder();
         LinkedList<Base> bases = new LinkedList<Base>();
         Base base = new Base(hq,game);
         bases.add(base);
         baseManager = new BaseManager(bases, game, buildOrder, hq);
         intelManager = new IntelManager(opponentStart.getPosition());
-        this.armyManager = new ArmyManager(intelManager);
+        this.armyManager = new ArmyManager(intelManager,19);
         attackLaunched = false;
         game.setLocalSpeed(5);
+        hqDestroyed = false;
+        timer = 0;
+        timerTwo = 0;
     }
 	
 
@@ -149,36 +171,34 @@ public class MyBot extends DefaultBWListener {
        // game.setTextSize(10);
         game.drawTextScreen(10, 10, "Playing as " + self.getName() + " - " + self.getRace());
         baseManager.manageBases();
+        armyManager.checkArmies();
         if(self.supplyUsed() > 40){
         	int predictedSupply = baseManager.getTotalSupply();
         	buildOrderManager.updateBuildOrder(predictedSupply - self.supplyUsed());
         	int size = armyManager.size();
-        	if(!attackLaunched){
-	        	//System.out.println("army size" + size + "  attack launched - " + attackLaunched);
-	    		//System.out.println(opponentRace);
-        	}
+        	
         	if(opponentRace == Race.Terran){
 	        	if(armyManager.size() >= 19 && !attackLaunched){
 	                System.out.println("nerd");
 	            	
-	            	armyManager.attack(opponentStart.getPosition());
+	            	//armyManager.attack(opponentStart.getPosition());
 	            	attackLaunched = true;
-	        		game.setLocalSpeed(10);
+	        		game.setLocalSpeed(5);
 	            }       
         	}
         	else if(opponentRace == Race.Zerg){
         		if(armyManager.size() >= 19 && !attackLaunched){
 	            	
-	            	armyManager.attack(opponentStart.getPosition());
+	            	//armyManager.attack(opponentStart.getPosition());
 	            	attackLaunched = true;
-	        		game.setLocalSpeed(10);
+	        		game.setLocalSpeed(5);
         			
         		}
         	}
         	else if(opponentRace == Race.Protoss){
         		if(armyManager.size() >= 19 && !attackLaunched){
 	            	
-	            	armyManager.attack(opponentStart.getPosition());
+	            	//armyManager.attack(opponentStart.getPosition());
 	            	attackLaunched = true;
 	        		game.setLocalSpeed(5);
         			
@@ -187,17 +207,26 @@ public class MyBot extends DefaultBWListener {
         	else {
         		if(armyManager.size() >= 22 && !attackLaunched){
 	            	
-	            	armyManager.attack(opponentStart.getPosition());
+	            	//armyManager.attack(opponentStart.getPosition());
 	            	attackLaunched = true;
-	        		game.setLocalSpeed(10);
+	        		game.setLocalSpeed(5);
         			
         		}
         	}
-        	if(attackLaunched){
-        		armyManager.checkArmies();
-        	}
-        	if(self.supplyUsed() > 240){
-        		
+        	if(hqDestroyed){
+        		if(timerTwo >= 20200){
+        			//30 mins have been played out
+        			System.out.println("concede");
+        			game.leaveGame();
+        		}
+        		if(timer >= 1000){
+    				PositionOrUnit newTarget = intelManager.getTarget();
+    				System.out.println(newTarget.getPosition().toString());
+    				armyManager.attack(newTarget);
+    				timer = 0;
+        		}
+        		timer++;	
+        		timerTwo++;
         	}
         }
     }
